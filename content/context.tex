@@ -1,0 +1,74 @@
+\section{Context}
+
+\subsection{HPC}
+
+\begin{itemize}
+  \item simulation numérique
+  \item utiliser sur super calculateur qui sont composé de plusieurs noeuds
+  \item les noeuds sont connecté par un réseau haute performances dédié
+  \item une communication est de l'ordre le la micro seconde
+\end{itemize}
+
+\subsection{OS bypass}
+
+\begin{itemize}
+  \item habituellement les périphériques sont programmé depuis le kernel.
+  Ils utilise des interruptions pour avertir lors-ce que il y à un changement (e.g. un événement réseau).
+  En HPC on évite de passer par le systeme car les context switch sont coûteux.
+  Plusieurs µs (~3 sur la c4e).
+  \item donc pour utiliser ce genre de réseau on programme directement la NIC depuis l'espace utilisateur
+  \item 
+\end{itemize}
+
+\subsection{Polling}
+
+\begin{itemize}
+  \item consiste a scruté régulièrement une zone mémoire modifier par la NIC.
+  \item cette zone mémoire peut-être une projection de la mémoire de la carte en RAM ou une zone de la RAM modifier par la carte.
+  \item lors-ce que on scrute (Poll) la mémoire on peut déterminé l'états d'une communication réseau.
+  \item pour faire progressé les communications il faut donc régulièrement poll
+  \item a pour inconvenant une mauvaise réactivité et mobilise des resource de calcule pour faire des poll
+\end{itemize}
+
+\subsection{BXI}
+
+\begin{itemize}
+  \item les carte réseaux BXI (Bull eXascale Interconnect) sont dévelopé par Atos
+  \item elle sont capable de faire des communications sans intervention du CPU % offload
+  \item le CPU à juste à soumettre une commande et la carte s'occupe du reste
+  \item pour savoir si la communication est fini l'application peut poll ou recevoir une interruption en provenance de la carte
+  \item portal4
+  \item 
+\end{itemize}
+
+\subsection{MPI}
+
+\begin{itemize}
+  \item présenté MPI
+  \item les communications asynchrone
+  \item la progression ce fait :
+  \begin{itemize}
+    \item au moment des appelle a la biblio (MPI_Isend, MPI_Irecv, MPI_test, MPI_wait).
+    \item grâce à un thread dédier
+    \item grâce à une politique d'utilisation des threads de façon opportunist (quand ils ne font pas de calcule).
+    \item ...
+  \end{itemize}
+  \item 
+\end{itemize}
+
+\subsection{NewMadeleine}
+
+\begin{itemize}
+  \item NewMadeleine est une bibliothèque de communication...
+  \item elle est basé sur un système de progression asynchrone...
+  \item supporte différant type de communication grâce a un système de driver (portal4 pour BXI, ibverb pour IB, shm...)
+  \item ...
+\end{itemize}
+
+\subsection{Travaux antérieur}
+
+\begin{itemize}
+  \item Travaux de Mathieu Barbe durant un stage en 2019 sur l'utilisation d'interruption pour transmettre des événements réseau.
+  \item Ces travaux vis à diminué la latence du au fait de passer par un driver noyaux.
+  \item Il parle dans les perspective de directement traitement des interruptions depuis l'espace utilisateur ce qui mène à mon stage.
+\end{itemize}

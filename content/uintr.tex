@@ -1,0 +1,82 @@
+\section{Exploration de uintr}
+
+\subsection{Prérequis est accès}
+
+\begin{itemize}
+  \item difficulté d'accès au processeur...
+  \item J'ai eu accès au processeur ~2 mois 1/2 après le début du stage
+  \item J'ai donc eu accès à une machine avec 2 CPU SPR... VPN...
+  \item il faut une version patché du noyaux linux pour utilisé c'est nouvelle interruption
+  Ce patch n'est pas disponible en mainline linux.
+  J'ai donc télécharger le patch fourni par intel, je l'ai compiler puis je l'ai installer sur la machine
+  \item Pour utiliser les nouvelle instructions il faut une version récente de GCC... (version).
+  Pas disponible avec LLVM-Clang
+\end{itemize}
+
+\subsection{Fonctionnement des uintr}
+
+\subsubsection{Détail}
+
+\begin{itemize}
+  \item 5 instructions
+  \item registre MSR pour l'init
+\end{itemize}
+
+\subsubsection{Capacité présente et futur}
+
+\begin{itemize}
+  \item process => process
+  \item kernel => process
+  \item device => process
+  \item au niveaux des thread...
+  \item masquage
+  \item le thread dois être en ring-3
+  \item peut fonctionné si le thread est endormi mais j'ai pas testé car ...
+\end{itemize}
+
+\subsubsection{Example}
+
+\begin{itemize}
+  \item example avec schéma
+\end{itemize}
+
+\subsubsection{Partage du FD}
+
+\begin{itemize}
+  \item Pour mes testes "jouer" j'ai utiliser \verb|uintr_register_self()|
+  \item pipe / socket / URL pour NewMadeleine (on en reparle en section XXX)
+  \item \verb|pidfd_getfd|
+\end{itemize}
+
+\subsubsection{+}
+
+\begin{itemize}
+  \item comparé au signaux ?
+  \item TODO ...
+\end{itemize}
+
+\subsection{Tests du mécanisme}
+
+\begin{itemize}
+  \item entre process
+  \item entre threads
+  \item avec alt stack
+  \item test d'écrasement des interruptions
+  \item avec binding
+  \item avec turbo boost
+\end{itemize}
+
+\subsection{Correction du patch pour l'appel system uintr_alt_stack}
+
+TODO
+
+\subsection{Performances}
+
+TODO
+
+\begin{itemize}
+  \item Dans un premier temps j'ai pas bind les thread par pu donc j'avais de mauvais résultats.
+  \item J'ai fait différents bind (on vois que c'est similaire sauf quand on passe entre 2 NUMA)
+  \item si on monte la frequence c'est mieux (turbo boost)
+  \item 
+\end{itemize}

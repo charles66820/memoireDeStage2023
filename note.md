@@ -8,7 +8,7 @@
     - ce que j'avais à faire
   + le déroulement
     - Ce que j'ai fait (comment et pourquoi)
-    - montré la difficulté du travail (dir que j'ai eu du mal ?)
+    - montré la difficulté du travail (dire que j'ai eu du mal ?)
     - montré que j'utilise mes connaissances et ce que j'ai vue en cours en M1 + premier semestre de M2
 * Faire des citation
 * une 30aine de pages
@@ -36,7 +36,8 @@
 
 * La bibliographie
 * MPI
-* 
+* HPC
+* ...
 
 ## Le plan
 
@@ -46,14 +47,14 @@
 
 * context
   + Le HPC pour la simulation numérique...
+  + interruption possible mais pas pour du os bypass
   + OS bypass
   + polling
-  + interruption possible mais pas pour du os bypass
-  + MPI
-  + Présenté NewMadeleine : async ...
   + présenté le résaux BXI
+  + MPI
   + communication asynchrone (thread dédier, progression faite dans le calcule, progression opportuniste...).
   + problématique pas de réactivité, on dédie un thread ou on à besoin d'un système complex.
+  + Présenté NewMadeleine : async ...
 
   + Les interuption semble intérécente mais on une grande latance... Mathieu à vue ça dans sont stage... en perspective il dit qu'un mécanisme d'interruption en espace utilisateur serai interraisant à exploré.
 
@@ -68,8 +69,8 @@
     - comprendre sont fonctionnement uintr (commen les utiliser pour)
     - Driver shm NewMadeline car ipc
     - Faire progresser les come
-    - la même avec BXI
-    - on utiliser les interruption pour lancer le interruptions
+    <!-- - la même avec BXI
+    - on utiliser les interruption pour lancer le interruptions -->
     - retirer les pb du polling (list des pb)
 
 * Pris en main des uintr / Exploration de uintr
@@ -112,7 +113,7 @@
   + Les résultats en attente active pour voire le sur coup
   + Les résultats du recouvreemnt.
 
-  + permetre au MPI_Isend-post d'envoyer une interruption au MPI_Irecv-post pour qu'il puisse faire un MPI_Irecv-poll qui envois une interruption au MPI_Isend-poll. Ensuite le "MPI_Isend-poll" envois une interruption ainsi de suite jusqu'à la terminaison.
+  + **permette au MPI_Isend-post d'envoyer une interruption au MPI_Irecv-post pour qu'il puisse faire un MPI_Irecv-poll qui envois une interruption au MPI_Isend-poll. Ensuite le "MPI_Isend-poll" envois une interruption ainsi de suite jusqu'à la terminaison.**
 
 On à déjà un recv post et quand l'utilisateur post on lui donne...
 

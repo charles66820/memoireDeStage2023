@@ -1,0 +1,46 @@
+\section{Problématiques / Objectifs} % problématiques
+
+\subsection{Sujet}
+
+\subsubsection{Nouveau mécanisme d'interruption en espace utilisateur}
+
+\begin{itemize}
+  \item très récent...
+  \item sur les dernier CPU Inter Sapphire Rapide...
+  \item 
+\end{itemize}
+
+\subsubsection{contentions...}
+
+\subsection{Ne plus faire de Polling}
+
+\begin{itemize}
+  \item utiliser des interruption en HPC comme dans les autre domain
+  \item quand un périphériques a besoin de remonté une information il n'y a plus besoin de polling
+\end{itemize}
+
+\subsection{Objectifs}
+
+\subsubsection{Objectifs global}
+
+\begin{itemize}
+  \item L'objectifs à terme est de faire progressé les communications entre 2 noeuds sans utiliser du Polling
+  \item Donc permettre au carte réseau BXI de d'utiliser les interruption en espace utilisateur.
+  \item 
+\end{itemize}
+
+\subsubsection{Objectif du stage}
+
+\begin{itemize}
+  \item Comprendre le fonctionnement de uintr (à partir du manuel du CPU, des manuel du patch et des quelque document disponible)
+  \item Connaître leurs propriétés.
+  \item Mesurer leur performance.
+  \item intégré le mécanisme dans le driver de mémoire partagé (shm) de NewMadeleine, pour des communication entre processus (ipc)
+  \item faire progresser les communication à partir d'un handler d'interruption
+  \item évité les problèmes du polling :
+  \begin{itemize}
+    \item réactivité
+    \item mobilisation d'une ressource ou truffé le code de MPI_Test (simplifie la vie à l'utilisateur)
+    \item ...
+  \end{itemize}
+\end{itemize}

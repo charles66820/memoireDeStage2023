@@ -1,0 +1,62 @@
+\section{Intégration dans NewMadeleine}
+
+\subsection{Présenté NewMadeleine details}
+
+\begin{itemize}
+  \item liste de progression recv
+  \item liste de progression send
+  \item p_pw
+  \item post
+  \item poll
+  \item driver
+  \item nm_schedule (appelé par nm_wait, ...)
+  \item pioman
+  \item existe : progression du nm_schedule ou de pioman vers le core_task
+\end{itemize}
+
+\subsection{Modification}
+
+\begin{itemize}
+  \item ajout d'un driver sig_shm
+  \item ajout d'un driver uintr_shm
+  \item progression à partir du handler du driver vers les core_task
+  \item problématiques de gestion des interruptions
+  \begin{itemize}
+    \item on ne peut pas faire d'attente dans les handler
+    Les fonction doivent être async safe
+    \item on ne peut pas utiliser d'allocateur donc il faut utiliser des p_pw déjà alloué
+    \item pour avoir un p_pw disponible il faut faire progresser le communications
+    \item la progresser à une partie critique qui naissaisite un verrou
+    \item si on ne peut pas récupéré le core_lock (try_lock) il faut mettre à plus tard le trétement de l'interruption
+    \item on utilise donc une file lock-free
+    \item problématique des liste lock-free qui doivent être wait-free
+    \begin{itemize}
+      \item le principe d'une lfqueue est d'attente si quelqu'un d'autre modifie la file
+      \item il faut donc une file wait-free
+      \item j'ai fait de la biblio
+      \item décrire les différante solutions
+      \item solution d'Alexandre
+    \end{itemize}
+  \end{itemize}
+  \item gestion des multiple interruptions qui s'écrase, (prob_any / pour les large si la progression à traiter le pipeline courant)
+  \item quand est ce qu'on envois des interruption ?
+  \begin{itemize}
+    \item au moment ou on poste le premier paquet d'envois, pour indiquer au recepteur que des données sont disponible (le recepteur à toujours un paquet de reception posté)
+    \item au moment ou une progression est fait du coté du recepteur, pour indiquer une reception a l'éméteur
+    \item l'éméteur reçois une iterruption est détermine si l'émision est fini, petit paquet, ou si il faut envoyer la suite, paquet large.
+  \end{itemize}
+\end{itemize}
+
+\subsection{Suite de tests}
+
+Tous les tests ne passe pas ?
+
+\subsection{Performances}
+
+\subsubsection{Résultats avec attente active}
+
+TODO: voire le sur coup des interruption
+
+\subsubsection{Résultats recouvrement communication par du calcule}
+
+TODO: courbe overlap reception
