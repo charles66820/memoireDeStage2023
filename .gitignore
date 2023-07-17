@@ -11,4 +11,4 @@
 _minted-*
 *.pyg
 
-report.pdf
+!report.pdf
