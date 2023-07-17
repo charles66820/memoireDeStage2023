@@ -95,7 +95,7 @@
   + Présenté NewMadeleine details
   <!-- + revenir sur le problème que lon veut réglé est comment le réglé avec des interruption -->
   + progression ce fait par pioman ou attente active et là c'est directement du driver + contexte bizzard
-  + parlé du changement dans le system de progression
+  + parlé du changement dans le système de progression
   + parlé des problématiques de gestion des interruption
     - pas d'attente dans les handler (async safe)
     - difficulté avec le cycle de vie des p_pw

@@ -2,35 +2,113 @@
 
 \subsection{HPC}
 
+Le stage c'est déroulé dans le context du Calcule Haute Performance (HPC, High-Performance Computing en anglais).
+Le HPC utilise des supercalculateur pour la simulation numérique et le pré-apprentissage d'intelligences artificielles.
+Ces simulation simule la dynamique des fluides, la résistance structurelle, les interaction moléculaire, les flux d'aire...
+
+\bigskip
+
+Elles couvrent différant domaines :
 \begin{itemize}
-  \item simulation numérique
-  \item utiliser sur super calculateur qui sont composé de plusieurs noeuds
-  \item les noeuds sont connecté par un réseau haute performances dédié
-  \item une communication est de l'ordre le la micro seconde
+  \item L'industrie : le médicales, l'automobiles, l'aviations, la constructions, l'aérospatiales...
+  \item La défense : simulation atomique
+  \item La recherche scientifiques : la création des galaxie, la fusion nucléaire, le climat...
+  \item La météo
+\end{itemize}
+
+\bigskip
+
+De nos jour les supercalculateurs sont composé de plusieurs ordinateur que l'on appelle noeud de calculs.
+Ceci sont regroupé en grappe (cluster), il sont tous vue est utiliser comme une seul grande machine.
+Ce fonctionnement pose des questions sur la répartition du calcule, la distribution de la mémoire, la communication entre les différant noeuds...
+Dans le contexte du stage, nous nous sommes concentrés sur les communications entre noeuds.
+Les noeuds sont connecté entre eux par un réseau haute performance.
+Ce réseau est dédiés au communications est n'est pas forcément de type Ethernet.
+La gestion des noeuds est généralement effectuée par un second réseau plus traditionnel (Ethernet; TCP/IP).
+Ce genre de réseau ont une latence autour de quelque microseconde.
+Chaque noeuds possède une ou plusieurs carte réseau et il faut les programmé.
+
+\bigskip
+Structure:
+\begin{itemize}
+  \item \st{simulation numérique}
+  \item \st{utiliser sur super calculateur qui sont composé de plusieurs noeuds}
+  \item \st{les noeuds sont connecté par un réseau haute performances dédié}
+  \item \st{une communication est de l'ordre le la micro seconde}
 \end{itemize}
 
 \subsection{OS bypass}
 
+Le stage ce passe donc aussi dans un context système.
+Chaque noeuds à sont propre système d'exploitation qui permet la gestion des ressources, des processus, des fichiers, des périphériques.
+Pour cela le système à 2 espaces :
 \begin{itemize}
-  \item habituellement les périphériques sont programmé depuis le kernel.
-  Ils utilise des interruptions pour avertir lors-ce que il y à un changement (e.g. un événement réseau).
-  En HPC on évite de passer par le systeme car les context switch sont coûteux.
-  Plusieurs µs (~3 sur la c4e).
-  \item donc pour utiliser ce genre de réseau on programme directement la NIC depuis l'espace utilisateur
-  \item 
+  \item un espace noyau où seul le code du système peut s'exécuter. Le code du système peut donc modifié n'importe quelle endrois de la mémoire, exécuté n'importe quelle instructions...
+  \item un espace utilisateur où le code de l'utilisateur est exécuter. Cette espace est limité par le noyau qui controle ce que fait l'utilisateur.
+\end{itemize}
+
+En temps normale les périphériques sont programmé directement depuis le noyau du système d'exploitation ceci pour des questions de sécurité, de stendardisation des accés...
+Lors que l'on passe par le noyau (kernel en anglais) on à un surcoût qui n'est pas négligeable dans notre cas.
+Pour passer par le noyau on utilise généralement des appels système qui ce présente sous la forme d'une fonction.
+Un appel système vas effectué un changement de contexte (context switch) pour passé de l'espace utilisateur à l'espace noyau.
+Ce changement de context est coûteux car il sauvegarde les états du code de l'utilisateur avant d'exécuté celui du noyau.
+Une fois le context switch effectué le code noyau de l'appel système s'exécute avant de refaire un context switch pour cette fois passé de l'espace noyau à l'espace utilisateur, et donc restoré l'états du code de l'utilisateur.
+% Le kernel peut aussi exécuté aussi du code qu'il à mis à plus tard
+Donc le fait de passé par un appel système coûte plusieurs microseconde.
+On vois donc qu'on ne peut pas utiliser d'appel système car un appel système est déjà du même ordre de temps qu'une communication.
+En HPC on programme donc directement la carte réseau à partir de l'espace utilisateur (OS bypass en anglais).
+Pour cela on initialise toujours la carte à partir du noyau mais on fait une projection de la mémoire et des registre de la carte réseau dans l'espace d'adressage virtuelle du processus utilisateur.
+
+Pour transmettre des événement à l'utilisateur les périphériques utilise généralement les interruptions, qui passe par le système donc on ne les utilise pas en HPC.
+En HPC on fait donc du polling.
+
+Structure:
+\begin{itemize}
+  \item \st{habituellement les périphériques sont programmé depuis le kernel.}
+  \st{en HPC on évite de passer par le système car les context switch sont coûteux.
+  Plusieurs µs (~3 sur la c4e).}
+  \item \st{donc pour utiliser ce genre de réseau on programme directement la NIC depuis l'espace utilisateur}
+  \item \st{projection des registre dans la carte dans l'espace d'adressage de l'utilisateur... (feedback Mathieu)}
+  \item \st{Ils utilise des interruptions pour avertir lors-ce que il y à un changement (e.g. un événement réseau).}
 \end{itemize}
 
 \subsection{Polling}
 
+Le polling consiste à scruté (poll) régulièrement si on à reçus un événement.
+Concrètement cela consiste à lire une zone mémoire modifier par la carte réseau et voire si un bit est passé à 1.
+Pour cela il es possible de dédié un thread qui vas faire de l'attente active, scruté sans cesse si un événement à été reçus.
+Mais on perd une unité de calcule lors ce que le thread est ordonnancer donc de la puissance de calcul, donc cette technique est peu utilisé. % ref
+Il est aussi possible d'entrelacés le code de l'utilisateur avec des scrutation, c'est fréquemment utiliser mais ça oblige à l'utilisateur de prendre en compte la progression.
+Une autre solution qui est utiliser par Pioman dans NewMadeleine (j'en parlerai plus tard) consiste à faire ces scrutation de manière opportuniste dans les threads qui on fini leur calcul, mais pour cela il faut déjà utilisé plusieurs thread et avoir une application qui à des calculs d'une durée hétérogène.
+
+Il faut donc, peut importe la technique, régulièrement scruté pour faire progressé les communications.
+
+\subsubsection{Inconvénients du polling}
+
+%TODO: Définir réactivité au niveau MPI qui n'est pas le même au niveau ll.
+
+Dans le cas d'un thread dédier qui fait de l'attente active la réactivité est excellente hormis quand il y à plus de thread que d'unité de calcule est que le thread n'est pas ordonnancer.
+
+Quand on entrelaces le calcule est les scrutations la réactivité est moins bonne car il faut attendre que le calcule sois fini pour faire un poll.
+C'est ce qui est fait habituellement.
+
+Quand on utilise les thread de façon opportunist pour faire des scrutations la réactivité est moins bonne car il faut qu'il y est un thread disponible.
+
+Donc un chois dois être fait entre perdre de la capacité de calcule ou perdre en réactivité.
+En plus on perd un peut de temps de calcul à effectué du polling.
+
+Structure:
 \begin{itemize}
-  \item consiste a scruté régulièrement une zone mémoire modifier par la NIC.
-  \item cette zone mémoire peut-être une projection de la mémoire de la carte en RAM ou une zone de la RAM modifier par la carte.
-  \item lors-ce que on scrute (Poll) la mémoire on peut déterminé l'états d'une communication réseau.
-  \item pour faire progressé les communications il faut donc régulièrement poll
-  \item a pour inconvenant une mauvaise réactivité et mobilise des resource de calcule pour faire des poll
+  \item \st{consiste a scruté régulièrement une zone mémoire modifier par la NIC.}
+  \item \st{cette zone mémoire peut-être une projection de la mémoire de la carte en RAM ou une zone de la RAM modifier par la carte.}
+  \item \st{lors-ce que on scrute (Poll) la mémoire on peut déterminé l'états d'une communication réseau.}
+  \item \st{pour faire progressé les communications il faut donc régulièrement poll}
+  \item \st{a pour inconvenant une mauvaise réactivité et mobilise des resource de calcule pour faire des poll}
 \end{itemize}
 
 \subsection{BXI}
+
+BXI est un type de réseau dédier pour le communications entre noeuds...
 
 \begin{itemize}
   \item les carte réseaux BXI (Bull eXascale Interconnect) sont dévelopé par Atos
