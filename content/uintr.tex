@@ -5,7 +5,7 @@
 \begin{itemize}
   \item difficulté d'accès au processeur...
   \item J'ai eu accès au processeur ~2 mois 1/2 après le début du stage
-  \item J'ai donc eu accès à une machine avec 2 CPU SPR... VPN...
+  \item J'ai donc eu accès à une machine avec 2 CPU SPR... VPN... détails Saphir Rapid et VPN
   \item il faut une version patché du noyaux linux pour utilisé c'est nouvelle interruption
   Ce patch n'est pas disponible en mainline linux.
   J'ai donc télécharger le patch fourni par intel, je l'ai compiler puis je l'ai installer sur la machine
@@ -14,6 +14,8 @@
 \end{itemize}
 
 \subsection{Fonctionnement des uintr}
+
+TODO: comparaison avec les interruption de base (Feedback Mathieu)
 
 \subsubsection{Détail}
 
@@ -62,13 +64,17 @@
   \item entre threads
   \item avec alt stack
   \item test d'écrasement des interruptions
-  \item avec binding
+  \item avec binding (plus pourquoi avec binding que comparaison avec et sans)
   \item avec turbo boost
 \end{itemize}
 
-\subsection{Correction du patch pour l'appel system uintr_alt_stack}
+\subsection{Correction du patch pour l'appel système uintr_alt_stack}
 
 TODO
+
+\subsection{Mesure de la latence (Feedback Mathieu)}
+
+TODO: expliquer que le binding est important
 
 \subsection{Performances}
 
