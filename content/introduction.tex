@@ -1,61 +1,59 @@
 \section{Introduction}
 
-J'ai effectué mon stage de 6 mois dans l'équipe-projet TADaaM d'Inria.
+J'ai effectué mon stage de 6 mois dans l'équipe-projet TADaaM du Centre Inria de l'université de Bordeaux.
 Le sujet du stage à étais proposé par Alexandre Alexandre Denis (Inria) et Grégoire Pichon (Atos).
 Ils on aussi encadré le stage aussi que Mathieu BARBE (Atos).
 
 \subsection{Presentation Inria}
 
-Inria est TODO: here
+Inria est l'institut national français de recherche en sciences et technologies du numérique.
+Compte plus de 3 900 chercheurs et ingénieurs au sein de 215 équipes-projets.
+La plupart des centre sont communes avec une grande université.
 
 % pas trop dans le detail mais juste globalement
 
 \subsection{Presentation Atos (Eviden)}
 
+Atos est un des leader international de la transformation numérique.
+Atos couvre un champ large d'activité : le cloud, la cybersécurité, les services, le conseil, les supercalculateurs...
+Atos compte 112 000 collaborateurs.
+Atos est en restructuration pour ce séparé en 2 entités.
+L'entités qui nous intéresse pour ce stage est Eviden qui englobe les activité autour des supercalculateurs et du HPC.
+Cette restructuration est récente donc quand je parle d'Atos dans ce document je parle de la partie Eviden.
+
 % pas trop dans le detail mais juste globalement
-en restructuration je parle donc d'Atos dans ce document
 
 \subsection{Environnement de travail}
 
-\begin{itemize}
-  \item labo de recherche
-  \item un bureau dans l'open space de l'équipe projet TADaaM.
-  \item Salle de visio pour la réunion de suivie de stage toute le semaine
-  \item Baby foot ?
-  \item Cafeteria ?
-  \item ... ?
-\end{itemize}
+Mon environnement de travail c'est les locaux du Centre Inria de l'université de Bordeaux.
+J'ai un bureau dans l'open space de l'équipe-projet TADaaM.
+Je peut participé et assisté à des activités scientifique intéressantes (séminaire, soutenance de thèse, soutenance HDR, activité diverse...).
+J'ai accès au salle de visio conférence, notamment pour les réunion de suivie de stage hebdomadaire.
+Il y a aussi un Baby-foot, une cafeteria, une petite Médiathèque...
 
 \subsection{Le cadre}
 
-Inria (TADaaM) :
-\begin{itemize}
-  \item objectifs du service : faire de la recherche...
-  \item type de personnel : chercheur, post-doc, ingénieur, doctorant et stagiaire
-  \item Culture informatique : HPC, système... ?
-  \item Matériel et logiciels mis à disposition :
-  \begin{itemize}
-    \item un ordinateur portable
-    \item un doc avec écran, clavier et souris
-    \item service inria (email, mattermost, webex...)
-  \end{itemize}
-  \item contraintes : je suis libre pour la démarche, les outils...
-\end{itemize}
+Du coté de l'équipe TADaaM de Inria l'objectif de l'équipe est de faire de la recherche.
+Elle est composée de chercheurs, ingénieurs de recherche, post-doc, doctorant et stagiaire.
+La culture informatique de l'équipe est l'utilisation des environnements linux, des logiciels open source,
+des cluster de calcule HPC, le traitement des données et le système.
+L'équipe à mis à ma disposition un ordinateur portable avec une station de travail brancher à un écran, à internet, à un clavier et une souris.
+Inria donne aussi accès à un ensemble de services, boite email, service de communication Mattermost, service de visio Webex, intranet avec le menu de la cafeteria...
+J'ai étais libre d'installer mon système d'exploitation, d'utilisé les outils informatique que je voulais...
 
-Atos (BXI-LL) :
-\begin{itemize}
-  \item objectifs du service : développé le soft ba niveau pour la NIC BXI... (entre MPI et la carte) donc driver, lustre, portal...
-  \item type de personnel : ingénieurs... ?
-  \item Culture informatique : HPC, système... ?
-  \item Matériel et logiciels mis à disposition :
-  \begin{itemize}
-    \item une machine avec 2 CPU SPR accessible via VPN
-  \end{itemize}
-  \item contraintes : je suis libre
-\end{itemize}
+Du coté d'Atos l'équipe BXI-LL (BXI Low Level) est une équipe don l'objectif est de fournir le support logiciels bas niveau pour les carte réseaux BXI.
+Cela consiste à développé les drivers de la carte, le support Lustre\footnote{Lustre est un système de fichier parallèle et distribué. Il est utiliser pour l'I/O est ne fait pas partie de ce stage.} ainsi que l'interface logiciels Portal4.
+Cette interface permet aux implémentations MPI d'utiliser le réseaux BXI.
+Le personnel est composée d'ingénieurs, de doctorant et de stagiaire. /* TODO: vérifié */
+La culture informatique de l'équipe est l'utilisation des cluster HPC, la programmation système et l'utilisation d'un système de sécurité PKI pour accédé aux ordinateurs et aux services interne.
+Atos nous a donné accès à une machine avec deux processeur Intel Saphir Rapid.
+Pour accédé à cette machine ils nous on fourni un accès ssh et un compte VPN.
+J'ai peut avoir tous les droits d'accès sur cette machine pour changé le noyaux du système.
 
 \subsection{Presentation du plan}
 
-Context dans le quelle le stage ce place puis les objectifs a long term et le objectifs du stage.
-Le déroulement du stage avec les résultats. Pour finir un bilan et la suite.
-TODO: 
+Dans ce mémoire je vais commencé par vous présenté le context dans le quelle le stage ce place.
+Je continuerai par les objectifs à long term et les objectifs du stage.
+Je vous présenterai le nouveau mécanisme d'interruption et ce que j'ai fait avec.
+Je présenterai l'intégration de ce mécanisme dans la bibliothèque de communication NewMadeleine et les tests que l'on à effectué.
+Pour finir je ferai un bilan du stage et je parlerai de la suite.
