@@ -25,7 +25,7 @@ Dans le contexte du stage, nous nous sommes concentrés sur les communications e
 Les noeuds sont connecté entre eux par un réseau haute performance.
 Ce réseau est dédiés au communications est n'est pas forcément de type Ethernet.
 La gestion des noeuds est généralement effectuée par un second réseau plus traditionnel (Ethernet; TCP/IP).
-Ce genre de réseau ont une latence autour de quelque microseconde.
+Les réseaux haute performance ont une latence autour de quelque microseconde.
 Chaque noeuds possède une ou plusieurs carte réseau et il faut les programmé.
 
 \subsection{OS bypass}
@@ -80,30 +80,62 @@ En plus on perd un peut de temps de calcul à effectué du polling.
 
 \subsection{BXI}
 
-BXI est un type de réseau dédier pour le communications entre noeuds...
-
-\begin{itemize}
-  \item les carte réseaux BXI (Bull eXascale Interconnect) sont dévelopé par Atos
-  \item elle sont capable de faire des communications sans intervention du CPU % offload
-  \item le CPU à juste à soumettre une commande et la carte s'occupe du reste
-  \item pour savoir si la communication est fini l'application peut poll ou recevoir une interruption en provenance de la carte
-  \item portal4
-  \item 
-\end{itemize}
+BXI pour Bull eXascale Interconnect est un type de réseau d'interconnection (réseau haute performance) développé par Atos.
+Historiquement développé par Bull qui à été racheté par Atos.
+Ce réseau est dédier aux communications entre noeuds. Il est composé de carte réseau BXI et de switch BXI.
+La carte BXI est capable de faire progressé le communication réseau sans aucune intervention du processeur (offload des communications réseau).
+Le processeur à juste à soumettre une commande dans une file sur la carte et elle s'occupe de tous.
+Le processeur peut ensuite récupéré une file d'événements pour savoir ce qu'il c'est passé, en somme faire un poll.
+La carte est également capable de déclenché des interruptions.
+L'utilisation de la carte passe donc par une implémentation du protocol Portal4.
+L'utilisateur utilise donc le protocol pour envoyer et recevoir des paquets réseau.
 
 \subsection{MPI}
 
+MPI pour Message Passing Interface est une interface pour effectué des communications entre plusieurs processus, qui sont souvent sur des noeuds différant et qu'on appel \emph{processus MPI}.
+Cette interface fourni une abstraction pour transmettre des données entre plusieurs processus.
+L'abstraction masque la complexité des communications.
+L'interface permet d'envoyer et de recevoir des messages. Pour cela il y a deux mode de communications :
+
+\subsubsection{Les communications point à point}
+
+C'est à dire entre deux processus MPI, aussi appelé One-to-One.
+Pour ce faire le processus MPI récepteur vas appelé la fonction \code{MPI_Recv} qui est bloquante et vas attendre la reception d'un message.
+L'émetteur vas lui faire un appel à la fonction \code{MPI_Send} qui est aussi bloquante et vas envoyer un message est attendre que la communication sois fini.
+L'utilisation des fonctions \code{MPI_Send} / \code{MPI_Recv} est donc totalement synchrone ce qui bloque le code.
+La nome propose aussi une version non bloquante de ces fonctions qui sont \code{MPI_Isend} et \code{MPI_Irecv}.
+Cette version ce contente de posté la communication et rend immédiatement la main.
+Pour la progression et verifier la terminaison il faut donc d'autre fonctions \code{MPI_Test} qui vérifie la progression, et la fait si nécessaire, et la fonction \code{MPI_Wait} qui attend activement la terminaison et s'occupe de la progression si nécessaire.
+Il est important de noté que la norme ne précise pas si la progression ce fait en tâche de fond ou non, c'est aux implémentations de la nome MPI de choisir.
+C'est pour cela que la progression peut ce faire au niveau de des fonctions \code{MPI_Wait} et \code{MPI_Test} ou être faire avant est donc l'appel aux fonctions s'occupe juste de la terminaison.
+L'envoi des messages peut donc être asynchrone.
+
+\subsubsection{Les communications collective}
+
+Les communications collective ce fond entre plusieurs processus.
+Il en existe de différant type :
 \begin{itemize}
-  \item présenté MPI
-  \item les communications asynchrone
-  \item la progression ce fait :
-  \begin{itemize}
-    \item au moment des appelle a la biblio (MPI_Isend, MPI_Irecv, MPI_test, MPI_wait).
-    \item grâce à un thread dédier
-    \item grâce à une politique d'utilisation des threads de façon opportunist (quand ils ne font pas de calcule).
-    \item ...
-  \end{itemize}
-  \item 
+  \item un processus vers plusieurs (One-to-All) par example un broadcast d'un message
+  \item de plusieurs processus vers un seul (All-to-One) par example une reduction (e.g. un processus reçois la somme des valeurs des autre processus)
+  \item de plusieurs processus vers plusieurs (All-to-All) par example quand tous les processus on un message pour les autre
+\end{itemize}
+Pour les collective il existe également deux versions, bloquante et non bloquante, qui fonctionne de la même façon que les communications point à point.
+
+\subsubsection{La progression asynchrone}
+
+Pour faire progressé les communications de façon asynchrone il est possible de :
+
+\begin{itemize}
+  \item faire des appels à \code{MPI_test} régulièrement et faire du calcule entre chaque appel.
+  Cela nous permet de recouvrir la latence des communications par du calcule.
+  La progression ce faire également dans d'autre appel aux fonctions MPI.
+  Quand il n'y à plus de calcul à faire on repasse à une progression synchrone par un appel à \code{MPI_Wait} sauf si la communication est déjà fini.
+  \item utilisé un thread dédier aux progressions.
+  Dans ce cas c'est la bibliothèque MPI qui s'occupe de la progression des communications en tâche de fond grâce à un thread dédié.
+  Il faut donc faire attention au placement des threads et à prendre en compte qu'un thread est déjà utilisé par la bibliothèque de communication.
+  Il faut aussi évité d'appelé trop souvent \code{MPI_Test} car ça crée de la contention
+  \item utilisation des threads de façon opportunist c'est à dire quand un des thread à fini sont calcul il vas faire progressé les communications.
+  C'est ce qui est faire par Pioman dans NewMadeleine.
 \end{itemize}
 
 \subsection{NewMadeleine}
@@ -122,3 +154,8 @@ BXI est un type de réseau dédier pour le communications entre noeuds...
   \item Ces travaux vis à diminué la latence du au fait de passer par un driver noyaux.
   \item Il parle dans les perspective de directement traitement des interruptions depuis l'espace utilisateur ce qui mène à mon stage.
 \end{itemize}
+
+
+% Cité ce qui à été fait pour la progression dan NewMadeleine...
+% Le point de départ pour la progression avec pioman est ce papier : https://inria.hal.science/hal-01087775
+% Sur l'overlap, celui-ci : https://inria.hal.science/hal-01324179v1

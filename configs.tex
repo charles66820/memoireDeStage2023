@@ -26,3 +26,38 @@
 % \else
 %   % dvi code
 % \fi
+
+\newif\ifmarkdownCode
+\markdownCodetrue
+
+\ifmarkdownCode
+  \ifxetex
+    % from https://tex.stackexchange.com/questions/661993/recreate-markdown-style-inline-code-blocks-in-latex
+    \newcommand{\code}[1]{\mbox{% added this percent
+        \ttfamily
+        \tcbox[
+            on line,
+            boxsep=0pt, left=4pt, right=4pt, top=2pt, bottom=1.5pt,
+            toprule=0pt, rightrule=0pt, bottomrule=0pt, leftrule=0pt,
+            oversize=0pt, enlarge left by=0pt, enlarge right by=0pt,
+            colframe=white, colback=black!12,
+            height=1\baselineskip
+        ]{#1}% added this percent
+    }}
+  \else
+    % from https://tex.stackexchange.com/questions/661993/recreate-markdown-style-inline-code-blocks-in-latex
+    \newcommand{\code}[1]{\mbox{% added this percent
+        \ttfamily
+        \tcbox[
+            on line,
+            boxsep=0pt, left=4pt, right=4pt, top=2pt, bottom=1.5pt,
+            toprule=0pt, rightrule=0pt, bottomrule=0pt, leftrule=0pt,
+            oversize=0pt, enlarge left by=0pt, enlarge right by=0pt,
+            colframe=white, colback=black!12,
+            height=0.8\baselineskip
+        ]{#1}% added this percent
+    }}
+  \fi
+\else
+  \newcommand{\code}[1]{\texttt{\detokenize{#1}}} % replace \verb|#1|
+\fi
