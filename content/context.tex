@@ -83,7 +83,7 @@ En plus on perd un peut de temps de calcul à effectué du polling.
 BXI pour Bull eXascale Interconnect est un type de réseau d'interconnection (réseau haute performance) développé par Atos.
 Historiquement développé par Bull qui à été racheté par Atos.
 Ce réseau est dédier aux communications entre noeuds. Il est composé de carte réseau BXI et de switch BXI.
-La carte BXI est capable de faire progressé le communication réseau sans aucune intervention du processeur (offload des communications réseau).
+La carte BXI est capable de faire progressé le communication réseau sans aucune intervention du processeur (offload des communications réseau). % offloading des tâches réseau ?
 Le processeur à juste à soumettre une commande dans une file sur la carte et elle s'occupe de tous.
 Le processeur peut ensuite récupéré une file d'événements pour savoir ce qu'il c'est passé, en somme faire un poll.
 La carte est également capable de déclenché des interruptions.
@@ -92,7 +92,7 @@ L'utilisateur utilise donc le protocol pour envoyer et recevoir des paquets rés
 
 \subsection{MPI}
 
-MPI pour Message Passing Interface est une interface pour effectué des communications entre plusieurs processus, qui sont souvent sur des noeuds différant et qu'on appel \emph{processus MPI}.
+MPI pour Message Passing Interface est un standard pour fournir une interface pour effectué des communications entre plusieurs processus, qui sont souvent sur des noeuds différant et qu'on appel \emph{processus MPI}.
 Cette interface fourni une abstraction pour transmettre des données entre plusieurs processus.
 L'abstraction masque la complexité des communications.
 L'interface permet d'envoyer et de recevoir des messages. Pour cela il y a deux mode de communications :
@@ -106,7 +106,7 @@ L'utilisation des fonctions \code{MPI_Send} / \code{MPI_Recv} est donc totalemen
 La nome propose aussi une version non bloquante de ces fonctions qui sont \code{MPI_Isend} et \code{MPI_Irecv}.
 Cette version ce contente de posté la communication et rend immédiatement la main.
 Pour la progression et verifier la terminaison il faut donc d'autre fonctions \code{MPI_Test} qui vérifie la progression, et la fait si nécessaire, et la fonction \code{MPI_Wait} qui attend activement la terminaison et s'occupe de la progression si nécessaire.
-Il est important de noté que la norme ne précise pas si la progression ce fait en tâche de fond ou non, c'est aux implémentations de la nome MPI de choisir.
+Il est important de noté que le standard ne précise pas si la progression ce fait en tâche de fond ou non, c'est aux implémentations de la nome MPI de choisir.
 C'est pour cela que la progression peut ce faire au niveau de des fonctions \code{MPI_Wait} et \code{MPI_Test} ou être faire avant est donc l'appel aux fonctions s'occupe juste de la terminaison.
 L'envoi des messages peut donc être asynchrone.
 
@@ -140,16 +140,26 @@ Pour faire progressé les communications de façon asynchrone il est possible de
 
 \subsection{NewMadeleine}
 
-\begin{itemize}
-  \item NewMadeleine est une bibliothèque de communication...
-  \item elle est basé sur un système de progression asynchrone...
-  \item supporte différant type de communication grâce a un système de driver (portal4 pour BXI, ibverb pour IB, shm...)
-  \item ...
-\end{itemize}
+\emph{NewMadeleine} est une bibliothèque de communications qui historiquement à été développé pour le RPC (Remote procedure call).
+Elle a toujours cette capacité mais elle a évolué et implémente une interface MPI.
+On peut donc la considéré comme une implémentation du standard MPI avec des fonctionnalités supplémentaire.
+Elle est développé au Centre Inria de l'université de Bordeaux.
+Elle est basé sur un système de progression événementielle qui lui permet d'être asynchrone.
+Elle est composé en modules ce qui lui permet de chargé dynamiquement des stratégies d'optimisation sur le paquets.
+Les stratégies sont l'agrégation de paquets, l'utilisation de priorités, l'utilisation d'arbre de décision?, split_balance?.
+Elle possède également un système de drivers pour supporté différant type de communications comme des réseaux
+(e.g. portals4 pour BXI, ibverbs pour InfiniBand, psm2 pour OmniPath, ofi (Open Fabrics Interfaces), TCP) % Slingshot => cci ?
+et localement (shm (mémoire partagé), socket, self).
 
 \subsection{Travaux antérieur}
 
+% mixed order.
+TODO:
+
 \begin{itemize}
+  \item système de progression dans NewMadeleine
+  \item progression avec pioman
+  \item overlap
   \item Travaux de Mathieu Barbe durant un stage en 2019 sur l'utilisation d'interruption pour transmettre des événements réseau.
   \item Ces travaux vis à diminué la latence du au fait de passer par un driver noyaux.
   \item Il parle dans les perspective de directement traitement des interruptions depuis l'espace utilisateur ce qui mène à mon stage.
