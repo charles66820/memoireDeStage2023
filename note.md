@@ -12,6 +12,7 @@
     - montré que j'utilise mes connaissances et ce que j'ai vue en cours en M1 + premier semestre de M2
 * Faire des citation
 * une 30aine de pages
+* parlé de la machine qui crash quand il y a trop de charge
 
 * Petite description de INRIA
 * Petite description d'Atos (Eviden)
@@ -30,14 +31,6 @@
     - BXI-LL : une machine avec 2 CPU SPR accessible via VPN.
   + contraintes : démarche scientifique ? ...
 
-* parlé de la machine qui crash quand il y a trop de charge
-
-## Vue en cours est utilisé
-
-* La bibliographie
-* MPI
-* HPC
-* ...
 
 ## Le plan
 
