@@ -69,7 +69,7 @@
 * Pris en main des uintr / Exploration de uintr
 
   + sur processeur récent
-  + difficulté d'accés
+  + difficulté d'accès
   + naissaisite un patch de noyaux et une version récente de GCC
   + fonctionnement...
   + similaritude avec les signaux et interruption materiel

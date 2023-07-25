@@ -1,19 +1,29 @@
 \section{Exploration de uintr}
 
+Pour cette partir j'ai utiliser des connaissance personnel autour du système, du développement noyau, de Linux... et aussi ce que j'ai appris en cours de \emph{programmation système}, de \emph{système d'exploitation} et \emph{architecture des ordinateurs}.
+
 \subsection{Prérequis est accès}
 
-\begin{itemize}
-  \item difficulté d'accès au processeur...
-  \item J'ai eu accès au processeur ~2 mois 1/2 après le début du stage
-  \item J'ai donc eu accès à une machine avec 2 CPU SPR... VPN... détails Saphir Rapid et VPN
-  \item il faut une version patché du noyaux linux pour utilisé c'est nouvelle interruption
-  Ce patch n'est pas disponible en mainline linux.
-  J'ai donc télécharger le patch fourni par \intel{}, je l'ai compiler puis je l'ai installer sur la machine
-  \item il faut compiler le noyau patché et activé les uintr dans le menu de configuration (il est aussi possible d'activé la posibilité que le kernel resoive l'interruption quand le processus est endormie en tache interruptible.)
-  \item Pour utiliser les nouvelle instructions il faut une version récente de GCC... (version).
-  Pas disponible avec LLVM-Clang
-  \item pour compilé un programme il faut précié le flag de compilation \code{-muintr} pour les fichiers qui déclare un handler d'uintr.
-\end{itemize}
+Pour utilisé le mécanisme d'interruption en espace utilisateur il faut donc avoir accès à une CPU \intel{} Sapphire Rapids.
+Comme ils sont sortie très récemment ils sont assez difficile d'accès.
+Atos nous a, non sans difficulté donné accès, à une machine qui possède 2 processeur \intel{} Sapphire Rapids qui sont des \intel{} Xeon\textsuperscript{\tiny{\textregistered}} Platinum 8470.
+Ils y a eu plusieurs difficulté pour avoir une machine, pour quelle sois installer et pour quelle sois dans un réseau au quelle on puisse accédé depuis l'Inria.
+On à donc eu un accès VPN qui utilisé l'ancien système de VPN car le nouveau ne fonctionné pas.
+Nous avons donc eu accès à la machine environ deux mois et demi après le début du stage.
+La machine est déjà configuré avec le système d'exploitation Red Hat Enterprise Linux (RHEL) 9.1.
+Elle possède deux carte BIX v2 que nous n'avons pas utilisé lors du stage.
+
+Il faut aussi avoir une version patché du noyaux linux avec le support du nouveau mécanisme.
+Cette version patché n'est pas encore disponible dans la branche principal du noyau.
+Elle est disponible sur le GitHub d'\intel{}. Nous avons donc télécharger cette version patché.
+Nous l'avons compiler et installer sur la machine.
+Lors de la compilation il faut activé le support des uintr (Voir figure en annexes\ref{fig:enableFeaturesInConfigMenu}).
+Il est aussi possible d'activé le support qu'un thread bloqué, c'est à dire pas ordonnancer ou dans une appel système interruptible, puisse recevoir une uintr.
+
+Le mécanisme utilise de nouvelle instructions, il faut donc une version récente du compilateur GCC pour compiler les programme utilisateur qui utiliseront les uintr.
+Il faut donc la version \textbf{11.3.0} ou plus récente de GCC, sur RHEL il faut la version \textbf{12.1.1} ou superieur.
+Le support n'est pas encore disponible dans d'autre compilateur comme LLVM-Clang.
+Pour compiler un programme utilisateur il faut précisé le flag de compilation \code{-muintr} pour les fichiers qui définisse un handler d'interruption ou qui utilise les nouvelles instructions.
 
 \subsection{Fonctionnement des uintr}
 
