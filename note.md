@@ -76,7 +76,7 @@
   + 
   + J'ai du compiler est installer le patch du noyau
   + 
-  + comparaison avec les signaux (parler de tous les tests que j'ai fait. J'ai tester différante façon pour partager le FD)
+  + comparaison avec les signaux (parler de tous les testes que j'ai fait. J'ai tester différante façon pour partager le FD)
   + problème corriger avec la alt_stack
   + Performance du mécanisme
     - Dans un premier temps j'ai pas bind les thread par pu donc j'avais de mauvais résultats.
@@ -102,7 +102,7 @@
     - pour indiqué qu'un paquet à été reçus (quand on est dans le handler)
   + La gestion des gros paquet ce fait par rdv donc avec un petit paquet qui lance la premier interruption.
   + ajout des driver sig et uintr
-  + La suite de tests
+  + La suite de testes
   + Les résultats en attente active pour voire le sur coup
   + Les résultats du recouvreemnt.
 
