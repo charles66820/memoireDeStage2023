@@ -37,7 +37,7 @@ Pour commencer nous allons voire comment les interruption matérielle fonctionne
 Nous allons nous concentrer sur l'envois d'interruption entre deux processus qui sont fixer sur deux unité de calcul.
 Pour fonctionné les CPU on une unité dédié au traitement des interruptions, l'APIC pour Advanced Programmable Interrupt Controller.
 Cette APIC permet au système d'enregistré un handler pour chaque interruptions.
-Pour ce faire le système définit une table \emph{IDT} (Interrupt Descriptor Table) qui contiens 256 entrées.
+Pour ce faire le système définit un tableau \emph{IDT} (Interrupt Descriptor Table) qui contiens 256 entrées.
 Donc 256 interruptions possible, les valeurs entre 0 et 255 sont aussi appelé vecteur.
 Les vecteur compris entre 0 et 31 sont réservé pour les exceptions et interruption système, ce entre 32 et 127 sont réservé pour les interruptions pour les périphériques,
 128 est réservé pour les appel système et entre 129 et 255 pour des utilisation varier.
@@ -223,24 +223,38 @@ Que ce sois dans un handler de signal ou dans un handler d'interruption utilisat
 \subsubsection{Exemple de fonctionnement}
 \label{sec:exemple}
 
+Nous allons maintenant voir un example d'initialisation des unitr montré sur la figure suivante \ref{fig:initUintr}.
 
-
-\begin{itemize}
-  \item exemple avec schéma
-\end{itemize}
+\begin{enumerate}[label=\protect\circled{\arabic*}]
+  \item Le récepteur enregistre au prés du noyau un handler d'interruption qu'il a défini.
+  Le noyau vas enregistré ce handler dans le registre \code{IA32_UINTR_HANDLER} et vas initialiser une zone mémoire nommé \emph{UPID} pour User Posted Interrupt Descriptor.
+  Ce \emph{UPID} permet au mécanisme des uintr de manipuler des informations propre à ce thread qui sont essentielle pour l'envoi d'uintr.
+  Il est enregistré dans le registre \code{IA32_UINTR_PD}.
+  \item Le récepteur donne au noyau un vecteur entre 0 et 63 qu'il veut recevoir, 8 dans la figure. Le noyau lui retourne un descripteur de fichier qui pointe vers une structure qui possède à la fois le vecteur et l'adresse du \emph{UPID}.
+  \item Le récepteur envois ce descripteur de fichier aux émetteurs potentielle, un seul dans notre cas. Nous verrons comment partagé ce descripteur de fichier dans une section dédier\ref{sec:shareFD}.
+  \item L'émetteur vas s'enregistrer au prés du noyau grâce au descripteur de fichier.
+  Pour ce faire le noyau possède un tableau \emph{UITT} pour User Interrupt Target Table qui fait une taille de 256 entré par défaut.
+  L'adresse de ce tableau dois être enregistré dans le registre \code{IA32_UINTR_TT} avec ça taille dans les 4 premier octets du registre \code{IA32_UINTR_MISC}, on peut donc faire varier la taille de ce tableau.
+  Chaque entrées de ce tableau consiste en une zone mémoire nommé \emph{UITTE} pour User Interrupt Target Table Entry.
+  Le noyau vas donc trouvé une entré libre dans le \emph{UITT} et renseigné l'\emph{UITTE} avec le vecteur et l'adresse du \emph{UPID} obtenu grâce au descripteur de fichier.
+  Pour finir il retourne l'indice de l'entré à l'émetteur.
+  \item L'utilisateur peut maintenant envoyer autant d'interruption totalement depuis l'espace utilisateur.
+\end{enumerate}
 
 \begin{figure}[H]
   \includegraphics[width=\textwidth]{images/uintrInit.png}
   \caption{Phase d'initialisation des uintr}
   \label{fig:initUintr}
 \end{figure}
+
 \begin{figure}[H]
   \includegraphics[width=\textwidth]{images/uintrSend.png}
   \caption{L'envois d'une uintr}
   \label{fig:sendUintr}
 \end{figure}
 
-\subsubsection{Partage du FD}
+\subsubsection{Partage du descripteur de fichier}
+\label{sec:shareFD}
 
 \begin{itemize}
   \item Pour mes testes "jouer" j'ai utiliser \verb|uintr_register_self()|
@@ -261,6 +275,8 @@ Que ce sois dans un handler de signal ou dans un handler d'interruption utilisat
   \item avec binding (plus pourquoi avec binding que comparaison avec et sans)
   \item avec turbo boost
 \end{itemize}
+
+TODO: on peut actuellement enregistré plusieurs fois la même FD donc avoir des UITTE en double...
 
 \subsection{Correction du patch pour l'appel système uintr_alt_stack}
 
