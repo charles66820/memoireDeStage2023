@@ -53,8 +53,8 @@ Pour cela on initialise toujours la carte à partir du noyau mais on fait une pr
 
 \subsubsection{Les interruptions matérielle}
 
-Les interruptions matérielle, aussi nommé IRQ pour Interrupt ReQuest, existe depuis long temps est serve notamment à remonté des exceptions du processeur au noyau.
-Par example elle sont utilisé quand il y a une eu une division par zero.
+Les interruptions matérielle, aussi nommé IRQ pour Interrupt ReQuest, existe depuis long temps est serve notamment à remonté des exceptions d'un processeur au noyau.
+Par exemple elle sont utilisé quand il y a une eu une division par zero.
 Elle on ensuite été utilisé pour signaler des événements en provenance de périphériques et aussi pour de la communications entre processus.
 Dans ce document nous utiliseront le terme interruption ordinaire ou IRQ pour les désigner.
 
@@ -78,7 +78,7 @@ Il faut donc, peut importe la technique, régulièrement scruté pour faire prog
 
 %TODO: Définir réactivité au niveau MPI qui n'est pas le même au niveau ll.
 
-Dans le cas d'un thread dédier qui fait de l'attente active la réactivité est excellente hormis quand il y à plus de thread que d'unité de calcule est que le thread n'est pas ordonnancer.
+Dans le cas d'un thread dédier qui fait de l'attente active la réactivité est excellente hormis quand il y a plus de threads que d'unité de calcule est que le thread n'est pas ordonnancer.
 /* TODO: cité ce papier https://inria.hal.science/hal-03695835v1 et modifier */
 Quand on entrelaces le calcule est les scrutations la réactivité est moins bonne car il faut attendre que le calcule sois fini pour faire un poll.
 C'est ce qui est fait habituellement.
@@ -93,9 +93,9 @@ En plus on perd un peut de temps de calcul à effectué du polling.
 BXI pour Bull eXascale Interconnect est un type de réseau d'interconnection (réseau haute performance) développé par Atos.
 Historiquement développé par Bull qui à été racheté par Atos.
 Ce réseau est dédier aux communications entre noeuds. Il est composé de carte réseau BXI et de switch BXI.
-La carte BXI est capable de faire progressé le communication réseau sans aucune intervention du processeur (offload des communications réseau). % offloading des tâches réseau ?
-Le processeur à juste à soumettre une commande dans une file sur la carte et elle s'occupe de tous.
-Le processeur peut ensuite récupéré une file d'événements pour savoir ce qu'il c'est passé, en somme faire un poll.
+La carte BXI est capable de faire progressé le communication réseau sans aucune intervention du CPU (offload des communications réseau). % offloading des tâches réseau ?
+Le CPU à juste à soumettre une commande dans une file sur la carte et elle s'occupe de tous.
+Le CPU peut ensuite récupéré une file d'événements pour savoir ce qu'il c'est passé, en somme faire un poll.
 La carte est également capable de déclenché des interruptions.
 L'utilisation de la carte passe donc par une implémentation du protocol Portal4.
 L'utilisateur utilise donc le protocol pour envoyer et recevoir des paquets réseau.
@@ -125,9 +125,9 @@ L'envoi des messages peut donc être asynchrone. /* gardé cette phrase ? */
 Les communications collective ce fond entre plusieurs processus.
 Il en existe de différant type :
 \begin{itemize}
-  \item un processus vers plusieurs (One-to-All) par example un broadcast d'un message
-  \item de plusieurs processus vers un seul (All-to-One) par example une reduction (e.g. un processus reçois la somme des valeurs des autre processus)
-  \item de plusieurs processus vers plusieurs (All-to-All) par example quand tous les processus on un message pour les autre
+  \item un processus vers plusieurs (One-to-All) par exemple un broadcast d'un message
+  \item de plusieurs processus vers un seul (All-to-One) par exemple une reduction (e.g. un processus reçois la somme des valeurs des autre processus)
+  \item de plusieurs processus vers plusieurs (All-to-All) par exemple quand tous les processus on un message pour les autre
 \end{itemize}
 Pour les collective il existe également deux versions, bloquante et non bloquante, qui fonctionne de la même façon que les communications point à point.
 
@@ -160,6 +160,17 @@ Elle possède également un système de drivers pour supporté différant type d
 (e.g. portals4 pour BXI, ibverbs pour InfiniBand, psm2 pour OmniPath, ofi (Open Fabrics Interfaces), TCP) % Slingshot => cci ?
 et localement (shm (mémoire partagé), socket, self).
 
+\subsection{Les signaux}
+\label{sec:signal}
+
+Les signaux c'est un des mécanisme qui permet de faire l'interface entre un processus et le système.
+Pour cela le processus utilisateur fait des appel systèmes pour définir pour quelle signaux il veut être notifier ou non.
+Pour être notifier l'utilisateur peut défini au près du système un handler par signal.
+Ces handler sont déclencher par le noyau qui s'occupe de tous (sauvegarde de l'états du processus, changement de context...).
+Les signaux que l'utilisateur peut recevoir corresponde à des exceptions système (e.g. \emph{SIGFPE} pour une division par zero ou SIGSEGV pour un segmentation fault),
+à des informations (e.g. SIGTERM le système demande au processus de ce fermer) ou à des notifications de d'autre processus (i.e. SIGUSR1 et SIGUSR1).
+Il est possible de masquer la réception de signaux grâce à des appel système de masquage.
+
 \subsection{Travaux antérieur}
 
 % mixed order.
@@ -179,4 +190,10 @@ TODO:
 % Le point de départ pour la progression avec pioman est ce papier : https://inria.hal.science/hal-01087775
 % Sur l'overlap, celui-ci : https://inria.hal.science/hal-01324179v1
 
-TODO: pu / core logique, core, CPU, processeur...
+TODO: Il est important d'avoir les définitions suivante en tète :
+\begin{itemize}
+  \item \emph{CPU} défini la puce en ça totalité.
+  \item \emph{core} ou \emph{processeur} défini un des coeur du \emph{CPU}.
+  \item \emph{core logique}, \emph{processeur logique} ou \emph{unité de calcul} % (pu pour Process Unit) ou threads materiel
+  défini une unité de calcul au sein d'un coeur, il y en a deux par core dans les CPUs qui sont à notre disposition.
+\end{itemize}
