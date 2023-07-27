@@ -226,13 +226,13 @@ Que ce sois dans un handler de signal ou dans un handler d'interruption utilisat
 Nous allons maintenant voir un example d'initialisation des unitr montré sur la figure suivante \ref{fig:initUintr} :
 
 \begin{enumerate}[label=\protect\circled{\arabic*}]
-  \item Le récepteur enregistre au prés du noyau un handler d'interruption qu'il a défini.
+  \item Le récepteur enregistre au prés du noyau un handler d'interruption qu'il a défini avec l'appel système \code{uintr_register_handler(ui_handler)}.
   Le noyau vas enregistré ce handler dans le registre \code{IA32_UINTR_HANDLER} et vas initialiser une zone mémoire nommé \emph{UPID} pour User Posted Interrupt Descriptor.
   Ce \emph{UPID} permet au mécanisme des uintr de manipuler des informations propre à ce thread qui sont essentielle pour l'envoi d'uintr.
   Il est enregistré dans le registre \code{IA32_UINTR_PD}.
-  \item Le récepteur donne au noyau un vecteur uintr entre 0 et 63 qu'il veut recevoir, 8 dans la figure. Le noyau lui retourne un descripteur de fichier qui pointe vers une structure qui possède à la fois le vecteur et l'adresse du \emph{UPID}.
+  \item Le récepteur donne au noyau un vecteur uintr entre 0 et 63 qu'il veut recevoir, 8 dans la figure, avec l'appel système \code{uvec_fd <- uintr_vector_fd(8)}. Le noyau lui retourne un descripteur de fichier qui pointe vers une structure qui possède à la fois le vecteur et l'adresse du \emph{UPID}.
   \item Le récepteur envois ce descripteur de fichier aux émetteurs potentielle, un seul dans notre cas. Nous verrons comment partagé ce descripteur de fichier dans une section dédier\ref{sec:shareFD}.
-  \item L'émetteur vas s'enregistrer au prés du noyau grâce au descripteur de fichier.
+  \item L'émetteur vas s'enregistrer au prés du noyau grâce au descripteur de fichier, avec l'appel système \code{uipi_index <- uintr_register_sender(uvec_fd)}.
   Pour ce faire le noyau possède un tableau \emph{UITT} pour User Interrupt Target Table qui fait une taille de 256 entré par défaut.
   L'adresse de ce tableau dois être enregistré dans le registre \code{IA32_UINTR_TT} avec ça taille dans les quatre premier octets du registre \code{IA32_UINTR_MISC}, on peut donc faire varier la taille de ce tableau.
   Chaque entrées de ce tableau consiste en une zone mémoire nommé \emph{UITTE} pour User Interrupt Target Table Entry.
@@ -294,30 +294,75 @@ Par la suite, dans \emph{NewMadeleine} mous avons utiliser le système d'URL à 
 
 \subsection{Testes du mécanisme}
 
-Nous avons donc fait testes du mécanisme avec des example minimaux de communications entre processus.
+Nous avons donc fait des testes du mécanisme avec des example minimaux de communications entre processus, nous allons voir les plus pertinent dans cette section.
 
-TODO: here
+Tout d'abord des tests pour mesurer le temps d'envoi d'interruption en espace utilisateur entre deux threads et deux processus.
 
-\begin{itemize}
-  \item entre process
-  \item entre threads
-  \item avec alt stack
-  \item test d'écrasement des interruptions
-  \item avec binding (plus pourquoi avec binding que comparaison avec et sans)
-  \item avec turbo boost
-\end{itemize}
+Pour le teste d'envoi entre deux threads il commance par créer un nouveau thread qui vas commancer par se "bind" à une unité de calcul, nous le verrons en détail dans la section \ref{sec:latencyMesure}.
+Il vas ensuite enregistrer un handler, démasquer les interruption, enregistrer tous les threads du processus comme émetteur avec l'appel système \code{uipi_index <- uintr_register_self(vector)} (uipi_index est global au processus) et attendre grâce à une boucle.
+Pendent ce temps là le thread principal attend une second, ce temps est arbitraire est laisse le temps au thread d'enregistrer un handler.
+Après sont attente il vas se "bind" à une unité de calcul puis envoyer une interruption.
+Pour cela nous commençons par enregistre le temps processeur actuelle puis on utilise l'instruction \code{senduipi} avec variable global \code{uipi_index}.
+Une fois que le handler ce déclenche on enregistre le temps actuelle du processeur pour ensuite calculer la différence.
+Ce teste est capable de faire plusieurs fois cette mesure.
+Il fini par imprimer les différence de temps dans la console et par désallouer et de-enregistré les uintr et les autre structure.
 
-TODO: on peut actuellement enregistré plusieurs fois la même FD donc avoir des UITTE en double...
+Pour le teste d'envoi entre deux processus il commance par créer un pipe pour l'envoi du descripteur de fichier et une zone de mémoire partagé pour stocker les mesures de temps.
+Puis le processus ce fork en deux, le premier devient l'émetteur et le second de récepteur.
+Comme pour la version thread ils se "bind" à une unité de calcul.
+Le récepteur enregistre un handler et récupère un descripteur de fichier avec l'appel système \code{uvec_fd <- uintr_vector_fd(vector)} qu'il envois dans le pipe avant d'attendre grâce à une boucle.
+L'émetteur reçois le numéro du descripteur de fichier, il connais déjà le pid du processus grâce au fork, il peut donc utilisé \code{pidfd_getfd} pour dupliqué le descripteur de fichier.
+Avec ce descripteur il s'enregistre en temps qu'émetteur d'uintr.
+La mesure du temps et l'envoi d'interruption fonctionne comment pour la version thread.
+On peut aussi faire plusieurs fois la mesure et on imprime et effectue la terminaison proprement.
 
-\subsection{Correction du patch pour l'appel système uintr_alt_stack}
+On verra le résultats de c'est mesure dans la section \ref{sec:performance}.
 
-TODO
+Un teste ou le thread s'auto interromps tous simple en faisant un \code{uipi_index <- uintr_register_self(vector)} puis un \code{senduipi uipi_index} et on fait la mesure de la même façon que pour les autre testes.
+
+Pour les testes avec la pile alternative on à un test très simple qui est basé sur celui qui s'auto interromps et on modifie les tests d'envois entre deux processus ou threads pour mesurer les performances.
+Il est bien sur possible d'activé ou non l'utilisation de la pile alternative.
+Pour définir cette nouvelle pille on le faut juste après avoir enregistrer le handler et avant le démasquage.
+
+Un teste de démasquer les uintr dans un handler, c'est tous à fait possible et ça pose des problématique similaire que pour les signaux.
+
+Un teste est l'envoi de plusieurs interruptions d'affilée.
+Il y à une différence de comportement par rapport au signaux, quand on reçois une interruption et que le handler est déclenché le comportement est le même c'est à dire que les interruptions von s'écraser et le handler ce déclenchera à nouveau une fois.
+La ou ce trouve là difference c'est si on fait plusieurs interruptions avant que le handler ce déclenche, les interruptions s'écrase à ce moment là aussi donc le handler ce d'éclanche qu'une seul fois quand on fait deux interruptions successive qu'avec les signaux le handler de signal ce déclencherai deux fois pour deux émission de signal successive car le handler est déjà déclenché des le premier signal.
+
+Grâce à un teste nous avons vue q'actuellement on peut enregistrer plusieurs fois le même descripteur de fichier ce qui mène à des doublons dans le tableau \emph{UITT} avec plusieurs \emph{UITTE} pour le même couple vecteur / \emph{UPID}.
+Cette limitation de l'implémentation noyau est documenté dans le patch et accompagné d'un commentaire \emph{TODO}.
+
+\subsection{Correction d'un bug dans le patch noyau}
+
+En manipulent le mécanisme nous somme tombé sur un bug qui concerne l'utilisation d'une pile alternative.
+Comme pour les signaux il est possible de définir une pile alternative, cette nouvelle pile est utiliser au moment où le handler et déclencher.
+L'interface pour définir la pile alternative est la même pour les signaux et les uintr.
+Dans les manuels il est bien indiquer que l'utilisateur dois lui même allouer une zone mémoire consacré à la nouvelle pile, il a également la responsabilité de libérer la mémoire une fois le handler dé-enregistrer.
+Il est bien indiquer que l'utilisateur dois donné l'adresse de début (\emph{base address}) de la zone mémoire en plus la taille à l'appel système qui défini la pile alternative.
+Pour les uintr l'appel système est \code{uintr_alt_stack(spAddress, size)}.
+Il faut noté qu'une pile empile les éléments vers le haut c'est à dire que l'adresse du pointeur de pile décrois à l'ajout d'un éléments.
+Donc pour utiliser la zone mémoire dédier à la pile à partir de la fin.
+Du coté du noyau le mécanisme des signaux garde l'adresse et la taille en mémoire pour le moment ou le handler dois être déclencher.
+Le calcul du pointeur de pile de la nouvelle pile ce fait donc juste avant de déclencher le handler.
+Pour les uintr le noyau se contente juste d'enregistrer l'adresse dans le registre dédier \code{IA32_UINTR_STACKADJUST} et le processeur utilise l'adresse tel quel comme pointeur de pile.
+On est donc confronté à un bug de débordement mémoire car on part du début de la zone mémoire.
+Il y a bien un test dans le patch du noyau qui vérifie ce cas mais mal.
+Nous somme tombé sur ce bug au moment d'utiliser le uintr dans \emph{NewMadeleine} qui manipulent bien plus la mémoire qu'un simple teste, on ce retrouvé avec des problèmes de corruption mémoire, des défauts de segmentation et des "double free detected".
+Nous avons donc corriger le teste du patch noyau ainsi que l'appel système.
+Pour ce fait on ajoute la taille de la zone mémoire à l'adresse avant de l'écrire dans le registre.
+Nous avons donc fait une \emph{Pull request} sur le dépôt GitHub du patch, à l'heurs ou nous écrivons ce document il n'a toujours pas étais appliqué par \intel{}.
 
 \subsection{Mesure de la latence (Feedback Mathieu)}
+\label{sec:latencyMesure}
 
+% \item avec binding (plus pourquoi avec binding que comparaison avec et sans)
 TODO: expliquer que le binding est important
 
+% \item avec turbo boost
+
 \subsection{Performances}
+\label{sec:performance}
 
 TODO
 
