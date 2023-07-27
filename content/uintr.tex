@@ -75,14 +75,14 @@ Nous allons maintenant voir les états de l'envois d'une IRQ montré sur la figu
 \end{enumerate}
 
 \begin{figure}[H]
-  \includegraphics[width=\textwidth]{images/interruptSend.png}
+  \includegraphics[width=\textwidth]{interruptSend}
   \caption{L'envois d'une interruption}
   \label{fig:sendInt}
 \end{figure}
 
 Lors du déclenchement du handler noyau certain registres actuelle sont sauvegardé comme le pointeur de pile \code{RSP}, le registre d'états \code{RFLAGS}, le registre \code{CS} et le registre de pointeur d'instruction \code{RIP}.
 Cette sauvegarde ce fait en les empilant dans une nouvelle pile. Le vecteur de l'interruption est aussi empilé en temps que code erreur \emph{errorCode}.
-Une fois que le handler noyau a fini de s'exécuter il doit faire l'instruction \code{iret} qui a pour effect de dépilé les registre sauvegardé et de les restorer.
+Une fois que le handler noyau a fini de s'exécuter il doit faire l'instruction \code{iret} qui a pour effet de dépilé les registre sauvegardé et de les restorer.
 
 Il est possible de masquer les interruptions grâce à deux instructions utilisable seulement par le noyau qui sont \code{clui} et \code{stui}.
 Ces interruption modifie un flag (\emph{IF}) qui ce trouve dans le registre d'états de l'unité de calcul \code{RFLAGS} (aussi nommé \code{EFLAGS} sur les architecture 32bits).
@@ -243,7 +243,7 @@ Nous allons maintenant voir un example d'initialisation des unitr montré sur la
 \end{enumerate}
 
 \begin{figure}[H]
-  \includegraphics[width=\textwidth]{images/uintrInit.png}
+  \includegraphics[width=\textwidth]{uintrInit}
   \caption{Phase d'initialisation des uintr}
   \label{fig:initUintr}
 \end{figure}
@@ -256,7 +256,7 @@ Maintenant que nous avons vue l'initialisation nous allons pouvoir voire comment
   L'utilité de calcul vas donc pouvoir récupéré l'adresse de l'\emph{UPID} et le vecteur uintr à envoyer du récepteur grâce au tableau \emph{UITT} qui ce trouve dans le registre \code{IA32_UINTR_TT} et grâce à l'indice donné à l'instruction.
   Il vas aussi pouvoir verifier que l'indice ce trouve bien dans le tableau, avec \code{IA32_UINTR_MISC}, et que l'entré est valide.
   Dans la zone mémoire de l'\emph{UPID} il vas pouvoir écrire le vecteur uintr envoyer et il vas déterminer si il faut envoyer une interruption ordinaire.
-  En effect les interruption en espace utilisateur utilise les interruption ordinaire.
+  En effet les interruption en espace utilisateur utilise les interruption ordinaire.
   L'envoi de celle-ci dépende de si une interruption ordinaire n'a pas déjà été envoyer.
   Dans notre cas on vas considéré que c'est le premiere envois.
   \item Donc l'émetteur vas récupéré le vecteur d'interruption ordinaire dans le registre \code{IA32_UINTR_MISC} et sélectionner le \emph{ICR} correspond au vecteur ordinaire.
@@ -270,7 +270,7 @@ Maintenant que nous avons vue l'initialisation nous allons pouvoir voire comment
 \end{enumerate}
 
 \begin{figure}[H]
-  \includegraphics[width=\textwidth]{images/uintrSend.png}
+  \includegraphics[width=\textwidth]{uintrSend}
   \caption{L'envois d'une uintr}
   \label{fig:sendUintr}
 \end{figure}
@@ -353,18 +353,57 @@ Nous avons donc corriger le teste du patch noyau ainsi que l'appel système.
 Pour ce fait on ajoute la taille de la zone mémoire à l'adresse avant de l'écrire dans le registre.
 Nous avons donc fait une \emph{Pull request} sur le dépôt GitHub du patch, à l'heurs ou nous écrivons ce document il n'a toujours pas étais appliqué par \intel{}.
 
-\subsection{Mesure de la latence (Feedback Mathieu)}
+\subsection{Mesure de la latence}
 \label{sec:latencyMesure}
 
-% \item avec binding (plus pourquoi avec binding que comparaison avec et sans)
-TODO: expliquer que le binding est important
+Pour mesurer la latence entre le moment où on envois une interruption et où l'interruption est reçus par le handler on fait 2 mesure de temps.
+Pour faire les mesure de temps on utilise \code{clock_gettime} qui utilise l'introduction \code{rdtsc} et retourne le temps actuelle du processeur.
+On fait une premier mesure juste avant d'envoyer une interruptions et une seconde au tous début du handler.
+Pour obtenir la latence on a juste à soustraire la premier mesure à la seconde.
 
-% \item avec turbo boost
+Nous avons regarder le code assembleur pour s'assurer de la mesures.
+Pour l'envoi, que l'on peut voire sur la figure \ref{fig:sendUintrAsm}, on peut voir que entre la mesure est l'instruction d'envois il y a seulement une Lecture mémoire qui n'est pas très coûteuse.
+Du coté de la réception, que l'on peut voire sur la figure \ref{fig:handlerUintrAsm}, on vois la sauvegarde des registres généraux au début du handler.
+Cette sauvegarde ajoute un petit surcoût mais il est obligatoire.
+Le compilateur \emph{GCC} nous force à mettre le flag \code{general-regs-only} pour compiler un handler d'interruption et donc sauvegardé les registre généraux.
+On peut voire la déclaration d'un handler avec la mesure du temps sur la figure \ref{fig:unitrHandler}.
+\begin{figure}[H]
+  \includegraphics[width=\textwidth]{senduipiTimeThreadO3}
+  \caption{Code assembleur de l'envois d'uintr}
+  \label{fig:sendUintrAsm}
+\end{figure}
+
+\begin{figure}[H]
+  \includegraphics[height=\textwidth]{handlerTimeThreadO3}
+  \caption{Code assembleur de l'handler uintr}
+  \label{fig:handlerUintrAsm}
+\end{figure}
+
+\begin{figure}[H]
+  \includegraphics[width=\textwidth]{handlerDeclaration}
+  \caption{Déclaration du handler uintr}
+  \label{fig:unitrHandler}
+\end{figure}
+
+Nous faisons la mesure de la même façon pour les signaux.
+
+Pour ne pas perturber la mesure il faut "bind" les threads à une unité de calcul.
+"bind" consiste à demander au noyau de toujours ordonnancer le thread sur la même unité de calcul.
+Pour ce faire nous utilisons la bibliothèque \emph{hwloc}. % TODO: cite here hwloc
+Il est donc important de "bind" les threads pendent les mesures car dans le cas contraire le noyau vas changer le thread d'unité de calcul ce qui vas amené à un surcoût non négligeable.
+En effet le changement d'unité et un peut coûteux et invalide certain cache.
+
+"bind" les threads nous permet aussi de contrôler le placement de ceci, c'est à dire si on met le thread émetteur et le thread récepteur sur deux unité de calcule proche ou distante.
+Comme nous le verrons dans la section \ref{sec:performance} le placement a un impact sur la latence des uintr.
+
+Il est aussi important de fixer la fréquence de tous les core du CPU pour avoir des mesure courante.
 
 \subsection{Performances}
 \label{sec:performance}
 
-TODO
+% \item avec turbo boost
+
+TODO: here
 
 \begin{itemize}
   \item Dans un premier temps j'ai pas bind les thread par pu donc j'avais de mauvais résultats.
@@ -373,4 +412,4 @@ TODO
   \item comparé au signaux...
 \end{itemize}
 
-je n'ai pas fait de test dans le cas ou le thread est endormi ou bloqué
+Nous n'avons fait aucune testes avec les threads bloqué et interruptible.
