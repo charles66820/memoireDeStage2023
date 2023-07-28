@@ -380,6 +380,7 @@ On peut voire la déclaration d'un handler avec la mesure du temps sur la figure
 \end{figure}
 
 \begin{figure}[H]
+  \centering
   \includegraphics[width=\textwidth]{handlerDeclaration}
   \caption{Déclaration du handler uintr}
   \label{fig:unitrHandler}
@@ -401,15 +402,139 @@ Il est aussi important de fixer la fréquence de tous les core du CPU pour avoir
 \subsection{Performances}
 \label{sec:performance}
 
-% \item avec turbo boost
-
-TODO: here
-
+Dans cette section nous allons voir des mesure de la latence des uintr dans différant contexts.
+La fréquence des unités de calcul est fixer à 2GHz lors des mesure.
+Les mesure faite avec le turbo boost activé monte à 3.8GHz.
+Les mesures de latence sont en nanoseconde.
+Il est intéressant de noter que sur une unité de calcul cadencer à une fréquence de 2GHz elle execute environ deux instructions par nanoseconde. % plus 2 cycle
+Certaine mesure, que se sois avec les uintr ou les signaux, sont très élevé mais sont très peut nombreuse, elle sont certainement lié au système.
+Dans les graphiques que nous allons voir nous avons donc coupé les valeurs qui dépasse les 8000 nanoseconde.
+Nous avons défini trois placements à partir le la topologie de la machine fourni par Atos (vous pouvez trouver la topologie sur cette figure\ref{fig:lstopo}).
+Les trois placements sont les suivant :
 \begin{itemize}
-  \item Dans un premier temps j'ai pas bind les thread par pu donc j'avais de mauvais résultats.
-  \item J'ai fait différents bind (on vois que c'est similaire sauf quand on passe entre 2 NUMA)
-  \item si on monte la frequence c'est mieux (turbo boost)
-  \item comparé au signaux...
+  \item le placements "proche" qui consiste à placer les threads sur deux unité de calcule proche mais pas dans le même core.
+  \item le placements "éloigné" qui consiste à placer les threads sur deux unité de calcule qui sont dans le même CPU et qui sont éloigné.
+  \item le placements "très éloigné" qui consiste à placer les threads sur deux unité de calcule qui ce trouve sur deux CPU différant.
 \end{itemize}
 
-Nous n'avons fait aucune testes avec les threads bloqué et interruptible.
+Les mesures que nous allons présenter on étais faite sans que la pile alternative ne sois activé.
+Nous avons bien fait des mesures avec la pile alternative des uintr activé est nous n'avons vue aucune différence car l'utilisation de cette pile
+amené seulement à une copie de la mémoire d'un registre à un autre si le registre contiens une adresse ce qui est très peut coûteux.
+
+Dans nos graphiques nous appelons une mesure une interaction.
+Nous faisons donc un millions d'iterations et nous n'affichons pas la premier car cette itération est énormément perturber notamment par le coût de chargement des caches.
+
+Dans les graphiques nous avons représenté la mesure de la latence par des points bleu pour les signaux et par des points rouge pour les uintr.
+Nous ne cherchons pas à expliquer les mesure des signaux, elle sont juste là pour comparer les uintr avec un mécanisme qui passe par le noyau.
+
+Sur la graphiques \ref{subfig:latency1e6ThreadsNT}, les itérations sont représenté sur l'axe des abscisses et la latence sur l'axe des ordonnés.
+Bien sur plus la latence est basse mieux c'est.
+Nous observons que le mécanisme a une latence de environ 642 nanoseconde ce qui est environ 4.75 fois plus rapide que les signaux.
+On vois qu'il y a deux groupe de mesure :
+\begin{itemize}
+  \item un au alentours des 642 nanoseconde qui comporte la majorité des mesures.
+  On le vois bien dans le tableau \ref{tab:latency1e6ThreadsNT} qui ce trouve juste en dessous du graphiques.
+  En effet entre la mesure minimum et la mesure à 95\% il y a une différence de 19 nanoseconde.
+  On peut voir cette distribution aussi dans l'histogramme sur cette figure \ref{fig:distribution}.
+  Cette histogramme porte sur des plage de 300 nanoseconde.
+  On vois bien pour les uintr, en orange, que la majorité ce trouve sur la bande entre 300 et 600 nanoseconde.
+  \item un autre vers 2700 nanoseconde qui correspond certainement au moment ou l'interruptions n'as pas pu être reçus car le thread été dans le noyau.
+\end{itemize}
+
+Pour un mécanisme qui fonctionne au niveau des instructions on pourrais s'attendre à une latence moins grande mais le mécanisme est bien plus rapide que le fait de passé par le système.
+% il serai intéressant de comparer avec la latence d'une IRQ 236 et non uintr
+% TODO: ce qu'on en pense, c'est bon ?
+
+\begin{figure}[H]
+  \begin{subfigure}{\textwidth}
+    \includegraphics[width=\textwidth]{latency/1e6ThreadsNT}
+    \caption{}
+    \label{subfig:latency1e6ThreadsNT}
+  \end{subfigure}
+  \begin{subtable}{\textwidth}
+    \centering
+    \begin{tabular}{| l | l | l | l | l | l | l | l |}
+      \hline
+      &\bf mean &\bf std &\bf min  &\bf 10\% &\bf 50\% &\bf 95\% &\bf max\\
+      \hline
+      \bf sig   & 3065 & 160 & 2920 & 3001 & 3054 & 3157 & 68532\\
+      \hline
+      \bf uintr & 643  & 90  & 629  & 638  & 642  & 648  & 65973\\
+      \hline
+    \end{tabular}
+    \caption{}
+    \label{tab:latency1e6ThreadsNT}
+  \end{subtable}
+  \caption{Mesures de latence entre deux threads avec un placement proche}
+  \label{fig:latency1e6ThreadsNT}
+\end{figure}
+
+\begin{figure}[H]
+  \includegraphics[width=\textwidth]{latency/distribution}
+  \caption{Histogramme de distribution des mesures de la latence entre deux threads proche}
+  \label{fig:distribution}
+\end{figure}
+
+Nous avons fait les même mesure entre deux processus est les valeur sont très similaire peut importe le placement car le mécanisme fonctionne au niveau des threads.
+On peut retrouvé le ces mesure en annexe sur la figure \ref{fig:latency1e6ProcessNT}.
+
+En comparant les mesures de latences entre le placement proche et éloigné on vois une petite différence de 10 nanoseconde de plus, on peut voir ça sur la figure \ref{fig:latency1e6ThreadsF}.
+
+Quand on compare entre le placement proche et très éloigné on vois une grand différence qui est du notamment au fait de passer d'un noeud mémoire NUMA à un autre.
+On à donc une différence d'environ 172 nanoseconde de plus.
+Le graphiques nous montre également une plus grande dispersion de la latence avec la majorité qui est toujours en dessous de 1000 nanoseconde.
+On retrouve ces mesures sur la figure \ref{fig:latency1e6ThreadsVF} juste en dessous.
+\begin{figure}[H]
+  \begin{subfigure}{\textwidth}
+    \includegraphics[width=\textwidth]{latency/1e6ThreadsVF}
+    \caption{}
+    \label{subfig:latency1e6ThreadsVF}
+  \end{subfigure}
+  \begin{subtable}{\textwidth}
+    \centering
+    \begin{tabular}{| l | l | l | l | l | l | l | l |}
+      \hline
+      &\bf mean &\bf std &\bf min  &\bf 10\% &\bf 50\% &\bf 95\% &\bf max\\
+      \hline
+      \bf sig   & 4601 & 403 & 4009 & 4396 & 4561 & 4796 & 58200\\
+      \hline
+      \bf uintr & 818  & 136 & 801  & 810  & 814  & 820  & 58072\\
+      \hline
+    \end{tabular}
+    \caption{}
+    \label{tab:latency1e6ThreadsVF}
+  \end{subtable}
+  \caption{Mesures de latence entre deux threads avec un placement très éloigné}
+  \label{fig:latency1e6ThreadsVF}
+\end{figure}
+
+
+Quand on augmente la fréquence des unités de calcul la latence diminue.
+Pour ce faire on active le turbo boost du CPU.
+On le vois sur les mesure de la figure \ref{fig:latency1e6ThreadsNT-TB} pour le placement proche mais c'est également le cas pour l'éloigné et le très éloigné en figure \ref{fig:latency1e6ThreadsF-TB} et figure \ref{fig:latency1e6ThreadsVF-TB}.
+
+\begin{figure}[H]
+  \begin{subfigure}{\textwidth}
+    \includegraphics[width=\textwidth]{latency/1e6ThreadsNT_TB}
+    \caption{}
+    \label{subfig:latency1e6ThreadsNT-TB}
+  \end{subfigure}
+  \begin{subtable}{\textwidth}
+    \centering
+    \begin{tabular}{| l | l | l | l | l | l | l | l |}
+      \hline
+      &\bf mean &\bf std &\bf min  &\bf 10\% &\bf 50\% &\bf 95\% &\bf max\\
+      \hline
+      \bf sig   & 2262 & 294 & 2081 & 2216 & 2251 & 2357 & 283171\\
+      \hline
+      \bf uintr & 442  & 313 & 426  & 437  & 440  & 450  & 311486\\
+      \hline
+    \end{tabular}
+    \caption{}
+    \label{tab:latency1e6ThreadsNT-TB}
+  \end{subtable}
+  \caption{Mesures de latence entre deux threads avec un placement proche et le turbo boost activé}
+  \label{fig:latency1e6ThreadsNT-TB}
+\end{figure}
+
+Nous n'avons fait aucune mesures de latence pour les threads bloqué et interruptible.
