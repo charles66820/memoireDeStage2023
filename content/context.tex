@@ -1,18 +1,18 @@
-\section{Context}
+\section{Contexte}
 
 \subsection{HPC}
 
-Le stage c'est déroulé dans le context du Calcule Haute Performance (HPC, High-Performance Computing en anglais).
-Le HPC utilise des supercalculateur pour la simulation numérique et le pré-apprentissage d'intelligences artificielles.
-Ces simulation simule la dynamique des fluides, la résistance structurelle, les interaction moléculaire, les flux d'aire...
+Le stage s'est déroulé dans le contexte du Calcul Haute Performance (HPC, High-Performance Computing en anglais).
+Le HPC utilise des supercalculateurs pour la simulation numérique et le pré-apprentissage d'intelligences artificielles.
+Ces simulations simulent la dynamique des fluides, la résistance structurelle, les interactions moléculaires, les flux d'air...
 
 \bigskip
 
-Elles couvrent différant domaines :
+\noindent{}Elles couvrent différents domaines :
 \begin{itemize}
-  \item L'industrie : le médicales, l'automobiles, l'aviations, la constructions, l'aérospatiales...
-  \item La défense : simulation atomique
-  \item La recherche scientifiques : la création des galaxie, la fusion nucléaire, le climat...
+  \item L'industrie : médical, automobile, aviation, construction, aérospatiale...
+  \item La défense : simulation atomique...
+  \item La recherche scientifique : création de galaxies, fusion nucléaire, climat...
   \item La météo
 \end{itemize}
 
@@ -29,171 +29,183 @@ Les réseaux haute performance ont une latence autour de quelque microseconde.
 /* TODO: insisté sur la différence entre les réseaux pour le HPC et les réseaux classiques */
 Chaque noeuds possède une ou plusieurs carte réseau et il faut les programmé.
 
+De nos jours, les supercalculateurs sont composés de plusieurs ordinateurs que l'on appelle noeuds de calcul.
+Ceux-ci sont regroupés en grappes (clusters) et sont tous vus et utilisés comme une seule grande machine.
+Ce fonctionnement soulève des questions concernant la répartition du calcul, la distribution de la mémoire et la communication entre les différents noeuds.
+Dans le contexte du stage, nous nous sommes concentrés sur les communications entre noeuds.
+Les noeuds sont connectés entre eux par un réseau haute performance dédié aux communications, qui n'est pas forcément de type Ethernet.
+La gestion des noeuds est généralement effectuée par un second réseau plus traditionnel (Ethernet ; TCP/IP).
+Les réseaux haute performance ont une latence de l'ordre de quelques microsecondes ce qui n'est pas le cas des réseaux classiques qui ont une plus grande latence.
+Avec ce type de réseaux, le débit est aussi bien plus élevé.
+Chaque noeud possède une ou plusieurs cartes réseau et il faut les programmer.
+
 \subsection{OS bypass}
 
-Le stage ce passe donc aussi dans un context système.
-Chaque noeuds à sont propre système d'exploitation qui permet la gestion des ressources, des processus, des fichiers, des périphériques.
-Pour cela le système à 2 espaces :
+Le stage se passe donc aussi dans un contexte système.
+Chaque noeud a son propre système d'exploitation qui permet la gestion des ressources, des processus, des fichiers, des périphériques.
+Pour cela, le système a 2 espaces :
 \begin{itemize}
-  \item un espace noyau où seul le code du système peut s'exécuter. Le code du système peut donc modifié n'importe quelle endrois de la mémoire, exécuté n'importe quelle instructions...
-  \item un espace utilisateur où le code de l'utilisateur est exécuter. Cette espace est limité par le noyau qui controle ce que fait l'utilisateur.
+  \item Un espace noyau (kernel en anglais) où seul le code du système peut s'exécuter.
+  Le code du système peut donc modifier n'importe quel endroit de la mémoire, exécuter n'importe quelle instruction...
+  \item Un espace utilisateur où le code de l'utilisateur est exécuté.
+  Cet espace est limité par le noyau qui contrôle ce que fait l'utilisateur.
 \end{itemize}
 
-En temps normale les périphériques sont programmé directement depuis le noyau du système d'exploitation ceci pour des questions de sécurité, de stendardisation des accès...
-Lors que l'on passe par le noyau (kernel en anglais) on à un surcoût qui n'est pas négligeable dans notre cas.
-Pour passer par le noyau on utilise généralement des appels système qui ce présente sous la forme d'une fonction.
-Un appel système vas effectué un changement de contexte (context switch) pour passé de l'espace utilisateur à l'espace noyau.
-Ce changement de context est coûteux car il sauvegarde les états du code de l'utilisateur avant d'exécuté celui du noyau.
-Une fois le context switch effectué le code noyau de l'appel système s'exécute avant de refaire un context switch pour cette fois passé de l'espace noyau à l'espace utilisateur, et donc restoré l'états du code de l'utilisateur.
+En temps normal, les périphériques sont programmés directement depuis le noyau du système d'exploitation, cela est fait pour des raisons de sécurité et de standardisation des accès.
+Cependant, lorsque l'on passe par le noyau, il y a un surcoût qui n'est pas négligeable dans notre cas.
+En effet, pour passer par le noyau, on utilise généralement des appels système qui prennent la forme d'une fonction.
+Un appel système effectue un changement de contexte (context switch) pour passer de l'espace utilisateur à l'espace noyau.
+Ce changement de contexte est coûteux car il sauvegarde les états du code de l'utilisateur avant d'exécuter celui du noyau.
+Une fois le changement de contexte effectué, le code noyau de l'appel système s'exécute avant de refaire un changement de contexte pour, cette fois, passer de l'espace noyau à l'espace utilisateur et ainsi restaurer l'état du code de l'utilisateur.
 % Le kernel peut aussi exécuté aussi du code qu'il à mis à plus tard
-Donc le fait de passé par un appel système coûte plusieurs microseconde.
-On vois donc qu'il n'est pas préférable d'utiliser les appels système car un appel système est déjà du même ordre de temps qu'une communication.
-En HPC on programme donc directement la carte réseau à partir de l'espace utilisateur (OS bypass en anglais).
-Pour cela on initialise toujours la carte à partir du noyau mais on fait une projection de la mémoire et des registre de la carte réseau dans l'espace d'adressage virtuelle du processus utilisateur.
+Donc, le fait de passer par un appel système coûte plusieurs microsecondes.
+On voit donc qu'il n'est pas préférable d'utiliser les appels système, car leur durée est du même ordre de grandeur qu'une communication entre noeuds.
+En HPC, on programme donc directement la carte réseau à partir de l'espace utilisateur (OS bypass en anglais).
+Pour cela, on initialise toujours la carte à partir du noyau, mais on fait une projection de la mémoire et des registres de la carte réseau dans l'espace d'adressage virtuel du processus utilisateur.
 
-\subsubsection{Les interruptions matérielle}
+Pour transmettre des événements à l'utilisateur, les périphériques utilisent généralement les interruptions ordinaires, qui passent par le système donc on ne les utilise très peu en HPC.
+En HPC on privilégie donc le polling que nous verrons en se \ref{sec:polling}.
 
-Les interruptions matérielle, aussi nommé IRQ pour Interrupt ReQuest, existe depuis long temps est serve notamment à remonté des exceptions d'un processeur au noyau.
-Par exemple elle sont utilisé quand il y a une eu une division par zero.
-Elle on ensuite été utilisé pour signaler des événements en provenance de périphériques et aussi pour de la communications entre processus.
-Dans ce document nous utiliseront le terme interruption ordinaire ou IRQ pour les désigner.
+\subsection{Les interruptions matérielles}
 
-\subsubsection{TODO: trouvé un titre}
-
-Pour transmettre des événement à l'utilisateur les périphériques utilise généralement les interruptions ordinaire, qui passe par le système donc on ne les utilise très peu en HPC.
-En HPC on fait donc du polling.
+Les interruptions matérielles, également appelées IRQ pour "Interrupt ReQuest", existent depuis longtemps et
+servent à remonter des événements extérieurs, par exemple d'un clavier, d'un port de communication, d'un port IDE, etc.
+Elles ont ensuite été utilisées pour signaler des événements en provenance de périphériques plus variés, comme des cartes réseau.
+Dans ce document, nous utiliserons le terme "interruption ordinaire" ou "IRQ" pour les désigner.
 
 \subsection{Polling}
-
-Le polling consiste à scruté (poll) régulièrement si on à reçus un événement.
-Concrètement cela consiste à lire une zone mémoire modifier par la carte réseau et voire si un bit est passé à 1.
-Pour cela il es possible de dédié un thread qui vas faire de l'attente active, scruté sans cesse si un événement à été reçus.
-Mais on perd une unité de calcule lors ce que le thread est ordonnancer donc de la puissance de calcul, donc cette technique est peu utilisé. % ref
-Il est aussi possible d'entrelacés le code de l'utilisateur avec des scrutation, c'est fréquemment utiliser mais ça oblige à l'utilisateur de prendre en compte la progression.
-Une autre solution qui est utiliser par Pioman dans NewMadeleine (Nous en parlerons plus tard) consiste à faire ces scrutation de manière opportuniste dans les threads qui on fini leur calcul, mais pour cela il faut déjà utilisé plusieurs thread et avoir une application qui à des calculs d'une durée hétérogène.
+\label{sec:polling}
 
 Il faut donc, peut importe la technique, régulièrement scruté pour faire progressé les communications.
+
+
+Le \emph{polling} consiste à scruter (poll) régulièrement si un événement a été reçu.
+Concrètement, cela consiste à lire une zone mémoire modifiée par la carte réseau et vérifier si un bit est passé à 1.
+Pour cela, il est possible de dédier un thread qui effectuera une attente active, scrutant sans cesse si un événement a été reçu.
+Cependant, cette technique entraîne la perte d'une unité de calcul quand le thread est ordonnancer, ce qui réduit la puissance de calcul, donc elle est utilisée dans certaine cas comme expliqué dans cette article \cite{denis:hal-03695835}.
+Une autre approche consiste à entrelacer le code de l'utilisateur avec les scrutations, ce qui est fréquemment utilisé, mais cela oblige l'utilisateur à prendre en compte la progression.
+Une troisième solution, utilisée par \emph{Pioman} dans \emph{NewMadeleine} (nous en parlerons plus tard), consiste à effectuer ces scrutations de manière opportuniste dans les threads qui ont fini leur calcul, mais pour cela, il faut déjà utiliser plusieurs threads et avoir une application avec des calculs de durée hétérogène.
 
 \subsubsection{Inconvénients du polling}
 
 %TODO: Définir réactivité au niveau MPI qui n'est pas le même au niveau ll.
 
-Dans le cas d'un thread dédier qui fait de l'attente active la réactivité est excellente hormis quand il y a plus de threads que d'unité de calcule est que le thread n'est pas ordonnancer.
-/* TODO: cité ce papier https://inria.hal.science/hal-03695835v1 et modifier */
-Quand on entrelaces le calcule est les scrutations la réactivité est moins bonne car il faut attendre que le calcule sois fini pour faire un poll.
-C'est ce qui est fait habituellement.
+Dans le cas d'un thread dédié qui effectue une attente active, la réactivité est excellente, sauf lorsque le nombre de threads dépasse le nombre d'unités de calcul et lorsque le thread n'est pas ordonnancé.
 
-Quand on utilise les thread de façon opportunist pour faire des scrutations la réactivité est moins bonne car il faut qu'il y est un thread disponible.
+Dans le cas où l'on entrelace le calcul et les scrutations, la réactivité est moins bonne car il faut attendre que le calcul soit terminé pour effectuer un poll.
+C'est ce qui est habituellement fait.
 
-Donc un chois dois être fait entre perdre de la capacité de calcule ou perdre en réactivité.
-En plus on perd un peut de temps de calcul à effectué du polling.
+Dans le cas où l'on utilise les threads de façon opportuniste pour effectuer des scrutations, la réactivité est moins bonne car il faut qu'il y ait un thread disponible.
+
+Un choix doit donc être fait entre perdre de la capacité de calcul ou perdre en réactivité.
+De plus, un peu de temps de calcul est perdu à effectuer du polling.
 
 \subsection{BXI}
 
-BXI pour Bull eXascale Interconnect est un type de réseau d'interconnection (réseau haute performance) développé par Atos.
-Historiquement développé par Bull qui à été racheté par Atos.
-Ce réseau est dédier aux communications entre noeuds. Il est composé de carte réseau BXI et de switch BXI.
-La carte BXI est capable de faire progressé le communication réseau sans aucune intervention du CPU (offload des communications réseau). % offloading des tâches réseau ?
-Le CPU à juste à soumettre une commande dans une file sur la carte et elle s'occupe de tous.
-Le CPU peut ensuite récupéré une file d'événements pour savoir ce qu'il c'est passé, en somme faire un poll.
-La carte est également capable de déclenché des interruptions.
-L'utilisation de la carte passe donc par une implémentation du protocol Portal4.
-L'utilisateur utilise donc le protocol pour envoyer et recevoir des paquets réseau.
+\emph{BXI} pour "Bull eXascale Interconnect" est un type de réseau d'interconnexion (réseau haute performance) développé par \atos{}.
+Historiquement développé par \emph{Bull} qui a été racheté par \atos{}, ce réseau est dédié aux communications entre noeuds.
+Il est composé de cartes réseau \emph{BXI} et de switches \emph{BXI}.
+Les cartes \emph{BXI} sont capables de faire progresser les communications réseau sans aucune intervention du CPU (offload des communications réseau).
+Le CPU a juste à soumettre une commande dans une file sur la carte, et elle s'occupe de tout.
+Le CPU peut ensuite récupérer une file d'événements pour savoir ce qu'il s'est passé, en somme faire un poll.
+Les cartes sont également capables de déclencher des interruptions.
+Les cartes implémente donc l'API de communication \emph{Portal4}.
+Les utilisateurs utilisent donc cette API pour envoyer et recevoir des paquets réseau.
+
+% Une des extensions \emph{Portal4} de \emph{BXI} permettent d'enregistrer un handler à une queue d'évènement (PtlEQAllocAsync())
+% \url{https://bitbucketbdsfr.fsc.atos-services.net/projects/SHBRIL/repos/bxi-portals/browse/portals/PtlEQAllocAsync.3} TODO:
 
 \subsection{MPI}
 
-MPI pour Message Passing Interface est un standard pour fournir une interface pour effectué des communications entre plusieurs processus, qui sont souvent sur des noeuds différant et qu'on appel \emph{processus MPI}.
-Cette interface fourni une abstraction pour transmettre des données entre plusieurs processus.
-L'abstraction masque la complexité des communications.
-L'interface permet d'envoyer et de recevoir des messages. Pour cela il y a deux mode de communications :
+MPI, pour "Message Passing Interface", est un standard permettant de fournir une interface pour effectuer des communications entre plusieurs processus, souvent situés sur des noeuds différents, que l'on appelle \emph{processus MPI}.
+Cette interface fournit une abstraction pour transmettre des données entre ces différents processus, masquant ainsi la complexité des communications.
+L'interface permet d'envoyer et de recevoir des messages. Pour cela, il existe deux modes de communications :
 
 \subsubsection{Les communications point à point}
 
-C'est à dire entre deux processus MPI, aussi appelé One-to-One.
-Pour ce faire le processus MPI récepteur vas appelé la fonction \code{MPI_Recv} qui est bloquante et vas attendre la reception d'un message.
-L'émetteur vas lui faire un appel à la fonction \code{MPI_Send} qui est aussi bloquante et vas envoyer un message est attendre que la communication sois fini.
-L'utilisation des fonctions \code{MPI_Send} / \code{MPI_Recv} bloque le code ce qui nous fait perdre du temps à attendre.
-La nome propose aussi une version non bloquante de ces fonctions qui sont \code{MPI_Isend} et \code{MPI_Irecv}.
-Cette version ce contente de posté la communication et rend immédiatement la main.
-Pour la progression et verifier la terminaison il faut donc d'autre fonctions \code{MPI_Test} qui vérifie la progression, et la fait si nécessaire, et la fonction \code{MPI_Wait} qui attend activement la terminaison et s'occupe de la progression si nécessaire.
-Il est important de noté que le standard ne précise pas si la progression ce fait en tâche de fond ou non, c'est aux implémentations de la nome MPI de choisir.
-C'est pour cela que la progression peut ce faire au niveau des fonctions \code{MPI_Wait} et \code{MPI_Test} ou être fait avant est donc l'appel aux fonctions s'occupe juste de la terminaison.
+C'est-à-dire entre deux processus MPI, également appelé One-to-One.
+Pour ce faire, le processus MPI récepteur va appeler la fonction \code{MPI_Recv} qui est bloquante et va attendre la réception d'un message.
+L'émetteur va lui faire un appel à la fonction \code{MPI_Send} qui est également bloquante et va envoyer un message, puis attendre que la communication soit terminée.
+L'utilisation des fonctions \code{MPI_Send} / \code{MPI_Recv} bloque le code, ce qui nous fait perdre du temps à attendre.
+Le standard MPI propose également une version non bloquante de ces fonctions, qui sont \code{MPI_Isend} et \code{MPI_Irecv}.
+Cette version se contente de poster la communication et rend immédiatement la main.
+Pour la progression et vérifier la terminaison, il faut donc utiliser d'autres fonctions comme \code{MPI_Test}, qui vérifie la progression et la fait si nécessaire, et la fonction \code{MPI_Wait}, qui attend activement la terminaison et s'occupe de la progression si nécessaire.
+Il est important de noter que le standard MPI ne précise pas si la progression se fait en tâche de fond ou non, c'est aux implémentations de la norme MPI de choisir.
+C'est pour cela que la progression peut se faire au niveau des fonctions \code{MPI_Wait} et \code{MPI_Test}, ou être faite avant, et donc l'appel aux fonctions s'occupe juste de la terminaison.
 L'envoi des messages peut donc être asynchrone. /* gardé cette phrase ? */
 
 \subsubsection{Les communications collective}
 
-Les communications collective ce fond entre plusieurs processus.
-Il en existe de différant type :
+Les communications collectives se font entre plusieurs processus.
+Il en existe différents types :
 \begin{itemize}
-  \item un processus vers plusieurs (One-to-All) par exemple un broadcast d'un message
-  \item de plusieurs processus vers un seul (All-to-One) par exemple une reduction (e.g. un processus reçois la somme des valeurs des autre processus)
-  \item de plusieurs processus vers plusieurs (All-to-All) par exemple quand tous les processus on un message pour les autre
+  \item Un processus vers plusieurs (One-to-All), par exemple un broadcast d'un message.
+  \item De plusieurs processus vers un seul (All-to-One), par exemple une réduction (e.g. un processus reçoit la somme des valeurs des autres processus).
+  \item De plusieurs processus vers plusieurs (All-to-All), par exemple lorsque tous les processus ont un message pour les autres.
 \end{itemize}
-Pour les collective il existe également deux versions, bloquante et non bloquante, qui fonctionne de la même façon que les communications point à point.
+Pour les communications collectives, il existe également deux versions, bloquante et non bloquante, qui fonctionnent de la même façon que les communications point à point.
 
 \subsubsection{La progression en tâche de fond}
 
-Pour faire progressé les communications en tâche de fond il est possible de :
+Pour faire progresser les communications en tâche de fond, il est possible de :
 
 \begin{itemize}
-  \item faire des appels à \code{MPI_test} régulièrement et faire du calcule entre chaque appel.
-  Cela nous permet de recouvrir la latence des communications par du calcule.
-  La progression ce faire également dans d'autre appel aux fonctions MPI.
-  Quand il n'y à plus de calcul à faire on repasse à une progression bloquante par un appel à \code{MPI_Wait} sauf si la communication est déjà fini.
-  \item utilisé un thread dédier aux progressions.
-  Dans ce cas c'est la bibliothèque MPI qui s'occupe de la progression des communications en tâche de fond grâce à un thread dédié.
-  Il faut donc faire attention au placement des threads et à prendre en compte qu'un thread est déjà utilisé par la bibliothèque de communication.
-  Il faut aussi évité d'appelé trop souvent \code{MPI_Test} car ça crée de la contention.
-  \item utilisation des threads de façon opportunist c'est à dire quand un des thread à fini sont calcul il vas faire progressé les communications.
-  C'est ce qui est fait par Pioman dans NewMadeleine.
+  \item Faire régulièrement des appels à \code{MPI_test} et effectuer des calculs entre chaque appel.
+  Cela permet de recouvrir la latence des communications par du calcul.
+  La progression peut également se faire dans d'autres appels aux fonctions MPI.
+  Lorsqu'il n'y a plus de calcul à effectuer, on repasse à une progression bloquante par un appel à \code{MPI_Wait}, sauf si la communication est déjà terminée.
+  \item Utiliser un thread dédié aux progressions.
+  Dans ce cas, c'est la bibliothèque MPI qui s'occupe de la progression des communications en tâche de fond grâce à un thread dédié.
+  Il faut donc faire attention au placement des threads et prendre en compte qu'un thread est déjà utilisé par la bibliothèque de communication.
+  Il faut aussi éviter d'appeler trop souvent \code{MPI_Test} car cela peut créer de la contention.
+  \item Utilisation des threads de façon opportuniste, c'est-à-dire qu'un des threads, une fois son calcul terminé, fera progresser les communications.
+  C'est ce qui est fait par \emph{Pioman} dans \emph{NewMadeleine}.
 \end{itemize}
 
 \subsection{NewMadeleine}
 
-\emph{NewMadeleine} est une bibliothèque de communications qui support le RPC (Remote procedure call) et implémente aussi une interface MPI.
-On peut donc la considéré comme une implémentation du standard MPI avec des fonctionnalités supplémentaire.
-Elle est développé au Centre Inria de l'université de Bordeaux.
-Elle est basé sur un système de progression événementielle qui lui permet d'être asynchrone.
-Elle est composé en modules ce qui lui permet de chargé dynamiquement des stratégies d'optimisation sur le paquets.
-Les stratégies sont l'agrégation de paquets, l'utilisation de priorités et le multi-rail /* TODO: précision multi-rail/split_balance */.
-Elle possède également un système de drivers pour supporté différant type de communications comme des réseaux
-(e.g. portals4 pour BXI, ibverbs pour InfiniBand, psm2 pour OmniPath, ofi (Open Fabrics Interfaces), TCP) % Slingshot => cci ?
-et localement (shm (mémoire partagé), socket, self).
+\emph{NewMadeleine} est une bibliothèque de communications qui prend en charge le RPC pour "Remote Procedure Call" et implémente également une interface MPI.
+On peut donc la considérer comme une implémentation du standard MPI avec des fonctionnalités supplémentaires.
+Elle est développée au Centre Inria de l'université de Bordeaux.
+Elle est basée sur un système de progression événementielle, ce qui lui permet d'être asynchrone.
+Elle est composée de modules, ce qui lui permet de charger dynamiquement des stratégies d'optimisation sur les paquets.
+Ces stratégies sont l'agrégation de paquets, l'utilisation de priorités et le multi-rail. /* TODO: précision multi-rail/split_balance */.
+Elle possède également un système de drivers pour supporter différents types de communications, tels que des réseaux
+(e.g. portals4 pour BXI, ibverbs pour InfiniBand, psm2 pour OmniPath, ofi pour "Open Fabrics Interfaces", TCP) % Slingshot => cci ?
+et des communications locales (shm pour "mémoire partagée", socket, self).
 
 \subsection{Les signaux}
 \label{sec:signal}
 
-Les signaux c'est un des mécanisme qui permet de faire l'interface entre un processus et le système.
-Pour cela le processus utilisateur fait des appel systèmes pour définir pour quelle signaux il veut être notifier ou non.
-Pour être notifier l'utilisateur peut défini au près du système un handler par signal.
-Ces handler sont déclencher par le noyau qui s'occupe de tous (sauvegarde de l'états du processus, changement de context...).
-Les signaux que l'utilisateur peut recevoir corresponde à des exceptions système (e.g. \emph{SIGFPE} pour une division par zero ou SIGSEGV pour un segmentation fault),
-à des informations (e.g. SIGTERM le système demande au processus de ce fermer) ou à des notifications de d'autre processus (i.e. SIGUSR1 et SIGUSR1).
-Il est possible de masquer la réception de signaux grâce à des appel système de masquage.
+Les signaux sont l'un des mécanismes permettant l'interface entre un processus et le système.
+Pour cela, le processus utilisateur effectue des appels système pour définir les signaux pour lesquels il souhaite être notifié.
+Pour être notifié, l'utilisateur peut définir un handler pour chaque signal auprès du système.
+Ces handler sont déclenchés par le noyau qui prend en charge toutes les opérations nécessaires (sauvegarde de l'état du processus, changement de contexte, etc.).
+
+Les signaux que l'utilisateur peut recevoir correspondent à des exceptions système (e.g. \emph{SIGFPE} pour une division par zéro ou \emph{SIGSEGV} pour une erreur de segmentation),
+à des informations (e.g. \emph{SIGTERM} pour demander au processus de se fermer) ou à des notifications d'autres processus (i.e. \emph{SIGUSR1} et \emph{SIGUSR2}).
+Il est possible de masquer la réception de certains signaux en utilisant des appels système de masquage.
 
 \subsection{Travaux antérieur}
 
-% mixed order.
-TODO:
-
-\begin{itemize}
-  \item système de progression dans NewMadeleine
-  \item progression avec pioman
-  \item overlap
-  \item Travaux de Mathieu Barbe durant un stage en 2019 sur l'utilisation d'interruption pour transmettre des événements réseau.
-  \item Ces travaux vis à diminué la latence du au fait de passer par un driver noyaux.
-  \item Il parle dans les perspective de directement traitement des interruptions depuis l'espace utilisateur ce qui mène à ce stage.
-\end{itemize}
-
+TODO: Amélioré ?
 
 % Cité ce qui à été fait pour la progression dan NewMadeleine...
-% Le point de départ pour la progression avec pioman est ce papier : https://inria.hal.science/hal-01087775
-% Sur l'overlap, celui-ci : https://inria.hal.science/hal-01324179v1
+Les origines de \emph{NewMadeleine} sont décrites dans cet article \cite{aumage:inria-00127356}.
+Le système de progression dans \emph{NewMadeleine} fait l'objet de plusieurs travaux.
+le fonctionnement du système de progression opportuniste \emph{Pioman} est décrit dans cet article\cite{denis:hal-01087775}.
+Pour l'impact de l'overlap et la manière de le mesurer, l'article \cite{denis:hal-01324179} explique tout en détail.
+Concernant l'utilisation des interruptions pour transmettre des événements réseau, les travaux de Mathieu Barbe pendant son stage en 2019 sont disponibles ici \cite{internshipMathieu}.
+Ces travaux visent à réduire la latence due au passage par un driver noyau.
+Ils abordent également les perspectives de traitement direct des interruptions depuis l'espace utilisateur, ce qui a conduit à ce stage.
 
-TODO: Il est important d'avoir les définitions suivante en tète :
+
+\subsection{Définitions} % TODO:  nommé autrement ?
+
+Il est important d'avoir les définitions suivantes en tête :
 \begin{itemize}
-  \item \emph{CPU} défini la puce en ça totalité.
-  \item \emph{core} ou \emph{processeur} défini un des coeur du \emph{CPU}.
+  \item \emph{CPU} désigne la puce dans sa totalité.
+  \item \emph{core} ou \emph{processeur} désigne l'un des coeur du \emph{CPU}.
   \item \emph{core logique}, \emph{processeur logique} ou \emph{unité de calcul} % (pu pour Process Unit) ou threads materiel
-  défini une unité de calcul au sein d'un coeur, il y en a deux par core dans les CPUs qui sont à notre disposition.
+  désigne une unité de calcul au sein d'un coeur. Il y en a deux par core dans les CPUs \intel{} Sapphire Rapids fourni par \atos{}.
 \end{itemize}
