@@ -1,68 +1,79 @@
 \section{Introduction}
 
-J'ai effectué mon stage de 6 mois dans l'équipe-projet TADaaM du Centre Inria de l'université de Bordeaux.
-Le sujet du stage à étais proposé par Alexandre Denis (Inria) et Grégoire Pichon (Atos).
-Ils on aussi encadré le stage avec Mathieu BARBE (Atos).
+J'ai effectué mon stage de fin de master de six mois dans l'équipe-projet \emph{TADaaM} du Centre Inria de l'université de Bordeaux.
+Le sujet du stage a été proposé par Alexandre Denis (Inria) et Grégoire Pichon (Atos).
+Ils ont aussi encadré le stage avec Mathieu BARBE (Atos).
 
 \subsection{Présentation Inria}
 
 Inria est l'institut national français de recherche en sciences et technologies du numérique.
 Il compte plus de 3 900 chercheurs et ingénieurs au sein de 215 équipes-projets.
-La plupart des centre sont commun avec une grande université.
+La plupart des centres sont commun avec de grandes universités.
 
 % pas trop dans le detail mais juste globalement
 
 \subsection{Présentation Atos (Eviden)}
 
-Atos est un des leader international de la transformation numérique.
-Elle couvre un champ large d'activité : le cloud, la cybersécurité, les services transactionnels, le conseil, l'infogérance, le Big Data, les supercalculateurs...
-Atos compte 112 000 collaborateurs.
-Atos est en restructuration pour ce séparé en 2 entités.
-L'entités qui nous intéresse pour ce stage est Eviden qui englobe notamment les activité autour des supercalculateurs et du HPC.
-Cette restructuration est récente donc quand Atos est évoqué dans ce document nous parlons de la partie Eviden.
+\atos{} est l'un des leaders internationaux de la transformation numérique.
+Elle couvre un large éventail d'activités, notamment le cloud, la cybersécurité, les services transactionnels, le conseil, l'infogérance, le Big Data, les supercalculateurs, etc.
+\atos{} compte 112 000 collaborateurs.
+Actuellement, \atos{} est en restructuration afin de se séparer en deux entités.
+L'entité qui nous intéresse pour ce stage est Eviden, qui englobe notamment les activités liées aux supercalculateurs et au HPC.
+Cette restructuration est récente, donc lorsque nous évoquons \atos{} dans ce document, nous parlons de la partie Eviden.
+
+\atos{} est le seul grand constructeur européen de supercalculateurs.
+Elle est donc le leader européen et est bien positionnée mondialement.
+Elle est présente dans le secteur du HPC depuis l'acquisition de la société \emph{Bull} en 2014.
+\emph{Bull} était déjà impliquée dans le HPC depuis les années 2000 et en avait fait son coeur de métier.
+
+La machine \emph{Leonardo} en Italie, construite par \atos{}, se classe quatrième au dernier Top500.
+% cite https://www.top500.org/lists/top500/2023/06/
+Ce classement évalue les machines les plus puissantes pour le HPC et est publié deux fois par an.
 
 % pas trop dans le detail mais juste globalement
 
 \subsection{Environnement de travail}
 
-Mon environnement de travail c'est les locaux du Centre Inria de l'université de Bordeaux.
-On a mis à disposition un bureau dans l'open space de l'équipe-projet TADaaM.
-Je peut participé et assisté à des activités scientifique intéressantes (séminaire, soutenance de thèse, soutenance HDR, activité diverse...).
-Nous avons accès aux salle de visio conférence, notamment pour les réunion de suivie de stage hebdomadaire.
-Il y a aussi un Baby-foot, une cafeteria, une petite Médiathèque...
+Mon environnement de travail se trouve dans les locaux du Centre Inria de l'université de Bordeaux.
+Un bureau dans l'open space de l'équipe-projet \emph{TADaaM} a été mis à ma disposition.
+Je peux participer et assister à des activités scientifiques intéressantes, telles que des séminaires, des soutenances de thèse, une soutenance HDR et d'autres activités diverses.
+Nous avons également accès aux salles de visioconférence, notamment pour les réunions de suivi de stage hebdomadaires.
+En plus, il y a un Baby-foot, une cafétéria, une petite médiathèque, etc.
 
 \subsection{Le cadre}
 
-Du coté de l'équipe TADaaM de Inria l'objectif de l'équipe est de faire de la recherche sur les sujets suivant :
+Du côté de l'équipe \emph{TADaaM} d'Inria, l'objectif de l'équipe est de mener des recherches sur les sujets suivants :
 
 \begin{itemize}
   \item Gestion des I/O (ordonnancement, bande passante...)
   \item Placement de processus
   \item Partitionnement de maillage (i.e. SCOTCH)
-  \item Localité materiel (i.e. hwloc)
+  \item Localité matérielle (i.e. hwloc)
   \item Optimisation des communications pour les réseaux haute performance, MPI (i.e. NewMadeleine)
 \end{itemize}
 
-Elle est composée de chercheurs, ingénieurs de recherche, post-doc, doctorant et stagiaire.
-La culture informatique de l'équipe est l'utilisation des environnements linux, des logiciels open source,
-des cluster de calcule HPC, le traitement des données et le système.
-L'équipe à mis à ma disposition un ordinateur portable avec une station de travail brancher à un écran, à internet, à un clavier et une souris.
-Inria donne aussi accès à un ensemble de services, boite email, service de communication Mattermost, service de visio Webex, intranet avec le menu de la cafeteria...
-Nous somme libre d'installer le système d'exploitation et d'utilisé les outils informatique que que l'on veut.
+Elle est composée de chercheurs, d'ingénieurs de recherche, de post-doc, de doctorants et de stagiaires.
+Sa culture informatique est l'utilisation d'environnements Linux, de logiciels open source, de clusters de calcul HPC,
+le traitement des données et le systèmes.
+L'équipe a mis à ma disposition un ordinateur portable avec une station de travail reliée à un écran, à Internet, à un clavier et une souris.
+Inria donne également l'accès à un ensemble de services, notamment une boîte e-mail, un service de communication (Mattermost), un service de visio (Webex) et un intranet avec le menu de la cafétéria, entre autres.
+Nous sommes libres d'installer le système d'exploitation et d'utiliser les outils informatiques de notre choix.
 
-Du coté d'Atos l'équipe BXI-LL (BXI Low Level) est une équipe don l'objectif est de fournir le support logiciels bas niveau pour les carte réseaux BXI.
-Cela consiste à développé les drivers de la carte, le support Lustre -- un système de fichier parallèle et distribué qui est utiliser pour l'I/O est ne fait pas partie de ce stage -- ainsi que l'interface logiciels Portal4.
-Cette interface permet aux implémentations MPI d'utiliser le réseaux BXI.
-Le personnel est composée d'ingénieurs, de doctorant et de stagiaire. /* TODO: vérifié */
-La culture informatique de l'équipe est l'utilisation des cluster HPC, la programmation système et l'utilisation d'un système de sécurité PKI pour accédé aux ordinateurs et aux services interne.
-Atos nous a donné accès à une machine avec deux CPU \intel{} Sapphire Rapids.
-Pour accédé à cette machine ils nous on fourni un accès ssh et un compte VPN.
-Nous avons eu tous les droits d'accès sur cette machine pour changé le noyaux du système.
+Du côté d'\atos{} l'équipe BXI-LL (BXI Low Level) a pour objectif de fournir le support logiciel bas niveau pour les cartes réseaux BXI.
+Cela comprend le développement des pilotes de la carte, le support Lustre (un système de fichiers parallèle et distribué utilisé pour l'I/O, qui ne fait pas partie de ce stage), ainsi qu'une implémentation de l'interface logicielle \emph{Portal4}.
+\emph{Portal4} est une interface logicielle qui permet une abstraction des opérations possibles sur les réseaux HPC.
+Son but est de faciliter l'utilisation de ces opérations réseau avec les meilleures performances possibles pour les implémentations MPI. /* je suis pas sur de ma présentation de Portal4 */
+L'implémentation d'\atos{} permet aux implémentations MPI d'utiliser le réseau BXI.
+Le personnel de l'équipe est composé d'ingénieurs, de doctorants et de stagiaires.
+La culture informatique de l'équipe est l'utilisation de clusters HPC, la programmation système et l'utilisation d'un système de sécurité PKI pour accéder aux ordinateurs et aux services internes.
+\atos{} nous a donné accès à une machine avec deux CPU \intel{} Sapphire Rapids.
+Pour accéder à cette machine, ils nous ont fourni un accès SSH et un compte VPN.
+Nous avons eu tous les droits d'accès sur cette machine pour changer le noyau du système.
 
 \subsection{Présentation du plan}
 
-Dans ce mémoire nous allons commencé par une présentation du context dans le quelle le stage ce place.
-Puis nous continuerons avec les objectifs à long term et les objectifs du stage.
-Nous verrons ensuite le nouveau mécanisme d'interruption et ce que nous avons fait avec.
-Nous continuerons par la présentation de l'intégration de ce mécanisme dans la bibliothèque de communication NewMadeleine et les testes que l'on à effectué.
-Pour finir un bilan du stage ainsi que les travaux qui vont suivre.
+Dans ce mémoire, nous commencerons par une présentation du contexte dans lequel le stage se place.
+Ensuite, nous aborderons les objectifs à long terme ainsi que les objectifs du stage.
+Nous continuerons en décrivant le nouveau mécanisme d'interruption en espace utilisateur et ce que nous en avons fait.
+Ensuite, nous verrons l'intégration de ce mécanisme dans la bibliothèque de communication NewMadeleine, ainsi que les tests que nous avons effectués.
+Pour finir, nous ferons un bilan du stage et évoquerons les travaux qui suivront.
