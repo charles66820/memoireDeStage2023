@@ -8,7 +8,7 @@ Pour cette partir j'ai utiliser des connaissance personnel autour du système, d
 
 Pour utilisé le mécanisme d'interruption en espace utilisateur il faut donc avoir accès à un CPU \intel{} Sapphire Rapids.
 Comme ils sont sortie très récemment ils sont assez difficile d'accès.
-Atos nous a, non sans difficulté donné accès, à une machine qui possède 2 CPU \intel{} Sapphire Rapids qui sont des \intel{} Xeon\textsuperscript{\tiny{\textregistered}} Platinum 8470.
+\atos{} nous a, non sans difficulté donné accès, à une machine qui possède 2 CPU \intel{} Sapphire Rapids qui sont des \intel{} Xeon\textsuperscript{\tiny{\textregistered}} Platinum 8470.
 Ils y a eu plusieurs difficulté pour avoir une machine, pour quelle sois installer et pour quelle sois dans un réseau au quelle on puisse accédé depuis l'Inria.
 On à donc eu un accès VPN qui utilisé l'ancien système de VPN car le nouveau ne fonctionné pas.
 Nous avons donc eu accès à la machine environ deux mois et demi après le début du stage.
@@ -197,12 +197,12 @@ Pour les uintr l'envoi peut ce faire depuis un autre processus ou depuis le noya
 Avec les signaux le handler peut être déclenché que le processus cible soit endormi ou non pour les uintr c'est différant.
 Il faut que le thread sois en espace utilisateur pour recevoir une interruption sinon l'interruption sera reçus quand le thread revient en espace utilisateur.
 On a vue plutôt, dans les prérequis\ref{requirements}, qu'une fonctionnalité existe à la compilation du noyau pour autorisé l'interruption d'un thread bloqué.
-Si la fonctionnalité est activé il est donc possible d'interrompre un thread qui n'est pas ordonnancer ou qui est entrain de faire un appel système interruptible et donc le passé en espace utilisateur pour qu'il puisse recevoir l'interruption. % tâche interruptible c'est plus précis mais il faut le mettre dans le context
+Si la fonctionnalité est activé il est donc possible d'interrompre un thread qui n'est pas ordonnancer ou qui est entrain de faire un appel système interruptible et donc le passé en espace utilisateur pour qu'il puisse recevoir l'interruption. % tâche interruptible c'est plus précis mais il faut le mettre dans le contexte
 Pour utilisé cette fonctionnalité l'utilisateur dois renseigné un flag au moment de définir le handler.
 Il existe donc trois flags, le premier \code{UINTR_HANDLER_FLAG_WAITING_ANY} qui active la fonctionnalité et les deux autre qui s'ajoute au précédent et précise si c'est l'émetteur ou le récepteur qui vas prendre le surcoût du passage dans le noyau.
 Les flags sont \code{UINTR_HANDLER_FLAG_WAITING_RECEIVER} et \code{UINTR_HANDLER_FLAG_WAITING_SENDER}.
 
-Pour les signaux le déclenchement du handler est géré par le noyau qui vas sauvegarde de l'états du processus, définir une pile alternative si besoin, changer de context et appelé le handler utilisateur.
+Pour les signaux le déclenchement du handler est géré par le noyau qui vas sauvegarde de l'états du processus, définir une pile alternative si besoin, changer de contexte et appelé le handler utilisateur.
 Pour les uintr le déclenchement du handler est fait par le CPU, il est donc très sommaire :
 \begin{itemize}
   \item changer la pile si une pile alternative est disponible dans le registre \code{IA32_UINTR_STACKADJUST}
@@ -409,7 +409,7 @@ Les mesures de latence sont en nanoseconde.
 Il est intéressant de noter que sur une unité de calcul cadencer à une fréquence de 2GHz elle execute environ deux instructions par nanoseconde. % plus 2 cycle
 Certaine mesure, que se sois avec les uintr ou les signaux, sont très élevé mais sont très peut nombreuse, elle sont certainement lié au système.
 Dans les graphiques que nous allons voir nous avons donc coupé les valeurs qui dépasse les 8000 nanoseconde.
-Nous avons défini trois placements à partir le la topologie de la machine fourni par Atos (vous pouvez trouver la topologie sur cette figure\ref{fig:lstopo}).
+Nous avons défini trois placements à partir le la topologie de la machine fourni par \atos{} (vous pouvez trouver la topologie sur cette figure\ref{fig:lstopo}).
 Les trois placements sont les suivant :
 \begin{itemize}
   \item le placements "proche" qui consiste à placer les threads sur deux unité de calcule proche mais pas dans le même core.

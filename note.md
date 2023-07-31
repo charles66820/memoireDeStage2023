@@ -116,3 +116,9 @@ On à déjà un recv post et quand l'utilisateur post on lui donne...
 * bilan
 
 * consomation, pas d'attente active
+
+pour la contention :
+ligne de cache
+coérance d'accé à la mémoire 
+donc multithream pb
+gradularité taille de la ligne de cache 128
