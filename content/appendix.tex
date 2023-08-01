@@ -2,6 +2,43 @@
 
 \section{Annexes}
 
+\begin{lstlisting}[language=bash, caption=Récupération du code source du noyau Linux patché]
+  git clone git@github.com:intel/uintr-linux-kernel.git
+\end{lstlisting}
+
+\begin{lstlisting}[language=bash, caption=Configurer et compiler le noyau]
+  # Configurer le noyau sur la machine cible
+  cp -v /boot/config-$(uname -r) .config
+  make menuconfig
+
+  # Désactiver les clef de signature
+  scripts/config --disable SYSTEM_TRUSTED_KEYS
+  scripts/config --disable SYSTEM_REVOCATION_KEYS
+
+  # Compiler
+  make -j 16
+\end{lstlisting}
+
+\begin{lstlisting}[language=bash, caption=Installer le noyau]
+  sudo make modules_install
+  sudo make install
+\end{lstlisting}
+
+\begin{lstlisting}[language=bash, caption=Utiliser le noyau installé]
+  # À faire la premier fois
+  sudo grub2-mkconfig -o /boot/grub2/grub.cfg
+
+  sudo grubby --set-default /boot/vmlinuz-6.0.0+
+\end{lstlisting}
+
+\begin{lstlisting}[language=bash, caption=Lancer les tests uintr du noyau (le noyau doit être installé)]
+  make -C tools/testing/selftests TARGETS=uintr run_tests
+\end{lstlisting}
+
+\begin{lstlisting}[language=bash, caption=Supprimer le noyau installé]
+  sudo grubby --remove-kernel /boot/vmlinuz-6.0.0+
+\end{lstlisting}
+
 \begin{figure}[H]
   \includegraphics[width=\textwidth]{enableFeaturesInConfigMenu}
   \caption{Activé le support des uintr à la compilation du noyau}

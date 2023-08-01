@@ -67,3 +67,39 @@
 \newcommand*\circled[1]{\kern-2.5em%
   \put(0,4){\circle{16}}%
   \put(-3,0){\bfseries\large#1}~~}
+
+\definecolor{codeGreen}{rgb}{0,0.6,0}
+\definecolor{codeOrange}{rgb}{0.5,0.5,0.5}
+% #D19A66 209 154 102
+\definecolor{codeGray}{rgb}{0.5,0.5,0.5}
+\definecolor{redGray}{rgb}{0.5,0.5,0.5}
+% #E06C75 224 108 117
+\definecolor{blueGray}{rgb}{0.5,0.5,0.5}
+% #61AFEF 97 175 239
+\definecolor{magentaGray}{rgb}{0.5,0.5,0.5}
+% #C678DD 198 120 221
+\definecolor{codePurple}{rgb}{0.58,0,0.82}
+\definecolor{codeBack}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{customStyle}{
+  backgroundcolor=\color{codeBack},
+  commentstyle=\color{codeGray},
+  keywordstyle=\color{magenta},
+  numberstyle=\tiny\color{codeOrange},
+  stringstyle=\color{codeGreen},
+  basicstyle=\ttfamily\footnotesize,
+  breakatwhitespace=false,
+  breaklines=true,
+  captionpos=b,
+  keepspaces=true,
+  numbers=left,
+  numbersep=5pt,
+  showspaces=false,
+  showstringspaces=true,
+  showtabs=true,
+  tabsize=4,
+  extendedchars=true,
+  literate={à}{{\`a}}1 {À}{{\`A}}1 {é}{{\'e}}1 {è}{{\`e}}1
+}
+
+\lstset{style=customStyle}
