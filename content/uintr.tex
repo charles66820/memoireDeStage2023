@@ -104,8 +104,9 @@ Cette instruction existe car l'utilisateur n'a pas accès directement au \emph{U
 L'instruction suivant \code{uiret} fonctionne comme celle des interruption ordinaire (\code{iret}) mais pas avec les même registre et surtout elle est utilisable en espace utilisateur.
 La dernier instruction permet d'envoyer une uintr grâce à un indice que nous allons voir dans cette section \ref{sec:exemple}.
 
-\begin{figure}[H]
-  \begin{tabular}{|l|l| }
+\begin{table}[H]
+  \centering
+  \begin{tabular}{|m{.5\textwidth}|m{.5\textwidth}|}
     \hline
     \bf Interruption & \bf Interruption utilisateur\\
     \hline
@@ -117,59 +118,45 @@ La dernier instruction permet d'envoyer une uintr grâce à un indice que nous a
     \hline
     iret (Interrupt RETurn) & uiret (User Interrupt RETurn)\\
     \hline
-    \multirow{3}{0.5\textwidth}{APIC pins, APIC ICR, \code{INT n}, \code{INT3}, \code{INTO}, \code{BOUND} et \code{INT80 n}} & sendipi <uipi_index>\\
-    &\\
-    &\\
-    &\\
+    APIC pins, APIC ICR, \code{INT n}, \code{INT3}, \code{INTO}, \code{BOUND} et \code{INT80 n} & sendipi <uipi_index>\\
     \hline
     % \multicolumn{2}{|c|}{...} \\
     % \hline
   \end{tabular}
   \caption{Instructions des interruption et interruption en espace utilisateur}
   \label{tab:interruptInstructions}
-\end{figure}
+\end{table}
 
 Le mécanisme arrive aussi avec six nouveaux \emph{registres d'états}, des registres \emph{MSR} pour Model-specific registers.
 Ces registres sont modifier par le noyau grâce à des appels système que l'utilisateur fait pour initialiser les uintr et utiliser par le CPU.
 Ils sont décrit dans le tableau suivant\ref{tab:uintrStateRegisters} et nous expliciterons leur utilité par la suite.
 
-\begin{figure}[H]
-  \begin{tabular}{|l|l| }
+\begin{table}[H]
+  \centering
+  \begin{tabular}{|p{.5\textwidth}|p{.5\textwidth}|}
     \hline
     \bf Nom du registre & \bf Description\\
     \hline
-    IA32_UINTR_STACKADJUST & \multirow{2}{0.5\textwidth}{Utilisé par le récepteur pour définir l'adresse de la pile alternative}\\ % remplacé "définir" par "que l'unité de calcule connaisse"
-    &\\
+    IA32_UINTR_STACKADJUST & Utilisé par le récepteur pour définir l'adresse de la pile alternative\\ % remplacé "définir" par "que l'unité de calcule connaisse"
     \hline
-    IA32_UINTR_HANDLER & \multirow{2}{0.5\textwidth}{Utilisé par le récepteur pour définir l'adresse du handler uintr}\\
-    &\\
+    IA32_UINTR_HANDLER & Utilisé par le récepteur pour définir l'adresse du handler uintr\\
     \hline
-    IA32_UINTR_MISC & \multirow{7}{0.5\textwidth}{Utilisé par l'émetteur pour définir la taille de la \emph{UITT} et
+    IA32_UINTR_MISC & Utilisé par l'émetteur pour définir la taille de la \emph{UITT} et
     par le récepteur pour que l'APIC connaisse le vecteur d'interruption ordinaire qu'il dois reconnaître pour déclencher le handler uintr
-    et le dernier bit pour le flag de masquage \emph{UIF}}\\
-    &\\
-    &\\
-    &\\
-    &\\
-    &\\
-    &\\
+    et le dernier bit pour le flag de masquage \emph{UIF}\\
     \hline
-    IA32_UINTR_PD & \multirow{2}{0.5\textwidth}{Utilisé par le récepteur pour définir l'adresse du \emph{UPID}}\\
-    &\\
+    IA32_UINTR_PD & Utilisé par le récepteur pour définir l'adresse du \emph{UPID}\\
     \hline
-    IA32_UINTR_RR & \multirow{3}{0.5\textwidth}{Utilisé par l'APIC pour \textit{lister} les vecteurs uintr qu'il dois envoyer au récepteur\emph{UPID}}\\
-    &\\
-    &\\
+    IA32_UINTR_RR & Utilisé par l'APIC pour \textit{lister} les vecteurs uintr qu'il dois envoyer au récepteur\emph{UPID}\\
     \hline
-    IA32_UINTR_TT & \multirow{2}{0.5\textwidth}{Utilisé par l'émetteur pour définir l'adresse de la \emph{UITT}}\\
-    &\\
+    IA32_UINTR_TT & Utilisé par l'émetteur pour définir l'adresse de la \emph{UITT}\\
     \hline
     % \multicolumn{2}{|c|}{...} \\
     % \hline
   \end{tabular}
   \caption{Liste des six registre d'états des uintr}
   \label{tab:uintrStateRegisters}
-\end{figure}
+\end{table}
 
 % interrupt invoked (push oldRSP, RFLAGS, CS, RIP, errorCode (IRQ vector value ?))
 % IRET (pop errorCode, RIP, CS, RFLAGS, oldRSP)

@@ -2,65 +2,57 @@
 
 \subsection{Sujet}
 
-Le sujet est \emph{Interruptions en espace utilisateur pour le réseau BXI}.
+Le sujet est \emph{Interruptions en espace utilisateur pour le réseau BXI} \cite{internshipSubject}.
 
 \subsubsection{Nouveau mécanisme d'interruption en espace utilisateur}
 
-Ce nouveau mécanisme qui permet de dérouler une interruption à partir de l'espace utilisateur et très récent.
+Ce nouveau mécanisme qui permet de dérouler une interruption à partir de l'espace utilisateur est très récent.
 Il est seulement disponible sur les CPU \intel{} Sapphire Rapids qui sont officiellement sortis le 10 janvier 2023.
-% https://www.datacenterknowledge.com/intel/intel-launches-sapphire-rapids-after-4-delays-it-worth-it
+\footnote{\url{https://www.datacenterknowledge.com/intel/intel-launches-sapphire-rapids-after-4-delays-it-worth-it}}
 La plupart des CPU ont été disponibles à la vente le 14 mars.
-% https://www.intel.com/content/www/us/en/newsroom/news/4th-gen-intel-xeon-sprints-into-market.html
-AMD n'a pas encore annoncé de support pour les interruption en espace utilisateur.
-
-\subsubsection{contentions...} % contention mémoire autour du polling
-
-Le fonctionnement actuelle de la progression des communications amène à des problèmes de contention mémoire car plusieurs threads peuvent chercher à lire / modifier la même zone mémoire.
-Utiliser les interruptions permettrai de ne plus avoir ce problèmes car seul le thread concerné par une zone mémoire serai prévenu.
-
-TODO: 
+\footnote{\url{https://www.intel.com/content/www/us/en/newsroom/news/4th-gen-intel-xeon-sprints-into-market.html}}
+\emph{AMD} n'a pas encore annoncé de support pour les interruptions en espace utilisateur.
 
 \subsection{Projet global}
 
-Dans la plupart des autre domain les périphériques envoi une interruption ordinaire à l'application, par le bais des signaux ou d'un appel système bloquante, pour avertir d'un changement.
-L'idée serai de faire la même chose en HPC grâce au interruption en espace utilisateur.
-Le projet globale vise donc à faire progresser les communications entre plusieurs noeuds du réseau BXI sans faire de polling et en utilisant les interruptions en espace utilisateur.
-Cela permettrai de réduire globalement le temps de calcul d'une application.
-Pour ce faire la carte réseau BXI devra être capable de levé des interruptions en espace utilisateur.
-Le fait de supprimer le polling et de réduire le temps de calcul permettra de diminué la consommation électrique.
+Dans la plupart des autres domaines, les périphériques envoient une interruption ordinaire à l'application, par le biais des signaux ou d'un appel système bloquant, pour avertir d'un changement.
+L'idée serait de faire la même chose en HPC grâce aux interruptions en espace utilisateur.
+Le projet global vise donc à faire progresser les communications entre plusieurs nœuds du réseau BXI sans faire de polling et en utilisant les interruptions en espace utilisateur.
+Cela permettrait de réduire globalement le temps de calcul d'une application.
+Pour ce faire, la carte réseau BXI devra être capable de lever des interruptions en espace utilisateur.
+Le fait de supprimer le polling et de réduire le temps de calcul permettra de diminuer la consommation électrique.
 
 % remonter les évènements réseau jusque la bibliothèque NewMadeleine avec un coût aussi faible que possible.
 
 \subsubsection{Les objectifs}
 
-Il y a plusieurs objectifs, les principaux sont :
+Il y a plusieurs objectifs, les principaux sont les suivants :
 
 \begin{itemize}
   \item La réduction du temps de calcul.
-  \item utiliser des interruptions en espace utilisateur pour replacé le polling.
-  \item Simplifier pour l'utilisateur le recouvrement des communications par du calcul pour qu'il n'est plus à ajouter des \code{MPI_Test} en pleins milieu de ces calcul.
-  \item Amélioré la réactivité des communications sans qu'il y est besoin d'une unité de calcul dédier à l'attente active.
+  \item Utiliser des interruptions en espace utilisateur pour remplacer le polling.
+  \item Simplifier pour l'utilisateur le recouvrement des communications par du calcul, afin qu'il n'ait plus besoin d'ajouter des \code{MPI_Test} en plein milieu des calculs.
+  \item Améliorer la réactivité des communications sans avoir besoin d'une unité de calcul dédiée à l'attente active.
 \end{itemize}
 
-Ce stage est donc une premier étape de ce projet global.
+Ce stage est donc une première étape de ce projet global.
 
 \subsection{Objectifs du stage}
 
-Le premier objectif est de défricher le fonctionnement des interruption en espace utilisateur à partir des éléments suivant :
+Le premier objectif est de défricher le fonctionnement des interruptions en espace utilisateur à partir des éléments suivants :
 \begin{itemize}
-  \item Le manuel \intel{} de l'architectures 64 et IA-32 pour les développeurs logiciels
-  \item La présentation du mécanisme de Sohil Mehta, ingénieur \intel{} qui à développé le patch noyau, qui est une diapositive associer à des discussion sur LWN.net /* TODO: cité */ \footnote{\url{https://lwn.net/Articles/869140/}/* TODO: déplacé */}
-  \item le patch du noyau linux avec ces manuels. /* TODO: cité */
+  \item Le manuel \intel{} de l'architecture 64 et IA-32 pour les développeurs logiciels \cite{intelSoftwareDevMan}.
+  \item La présentation du mécanisme de \emph{Sohil Mehta}, ingénieur chez \intel{}, qui a développé le patch noyau. Cette présentation est une diapositive associée à des discussions sur LWN.net \cite{uintrLWN}.
+  \item Le patch du noyau Linux \cite{intelUintrLinuxKernel} avec ses manuels \cite{intelUintrLinuxKernelMan}.
 \end{itemize}
-Le second objectif est de connaître les propriétés du mécanisme et de mesuré ça performance.
-Le troisième objectif est de ne plus avoir à faire du polling que se sois dédié un tread ou utilisé les threads de façon opportunist, ne plus perdre du temps de calcule à poll et résoudre les problèmes de réactivité.
-Pour cela on envisage l'intégration de ces interruption dans le driver de mémoire partagé (shm) de NewMadeleine.
-Pour testé dans un premier temps le fonctionnement avec des communications entre processus (IPC\footnote{Inter Process Communication en anglais/* TODO: on garde pour certain acronyme? */}).
-Pour intégrer les interruption dans les drivers NewMadeleine il faut également permettre la progression des communications à partir d'un handler d'interruption.
-Le dernier objectif est de montré que l'utilisation d'interruption permet bien d'amélioré le recouvrement des communications par du calcul.
 
-% cite : Intel\textsuperscript{\tiny{\textregistered}} 64 and IA-32 Architectures Software Developer's Manual
+Le second objectif est de connaître les propriétés du mécanisme et de mesurer sa performance.
+Le troisième objectif est de ne plus avoir à faire du polling, que ce soit en dédiant un thread ou en utilisant les threads de façon opportuniste, afin de ne plus perdre de temps de calcul à poll et de résoudre les problèmes de réactivité.
+Pour cela, on envisage l'intégration de ces interruptions dans le driver de mémoire partagée (shm) de NewMadeleine.
+Lors de ce stage nous testerons le fonctionnement avec des communications entre processus (IPC, Inter Process Communication en anglais).
+Pour intégrer les interruptions dans les drivers de \emph{NewMadeleine}, il faut également permettre la progression des communications à partir d'un handler d'interruption.
+Le dernier objectif est de montrer que l'utilisation d'interruption permet bien d'améliorer le recouvrement des communications par du calcul.
 
 \subsection{La suite}
 
-Les objects suivant du projet global seront traité dans une thèse qui fait suite au stage.
+Les objectifs suivants du projet global seront traités dans une thèse qui fait suite au stage.

@@ -100,16 +100,26 @@ Dans le cas où l'on utilise les threads de façon opportuniste pour effectuer d
 Un choix doit donc être fait entre perdre de la capacité de calcul ou perdre en réactivité.
 De plus, un peu de temps de calcul est perdu à effectuer du polling.
 
+Dans le cas où l'on effectue trop de scrutations, on peut rencontrer des problèmes de contention mémoire.
+En effet, le CPU manipule la mémoire par lignes de 8 mots mémoire appelés lignes de cache.
+Ces lignes de cache font 512 bits sur un CPU 64 bits (car $8 * 64 = 512$), et 256 bits pour
+des CPU 32 bits (car $8 * 32 = 256$).
+Pour garantir la cohérence d'accès à la mémoire, ces lignes de cache sont invalidée lorsque quelqu'un d'autre les manipule.
+Ainsi, si un thread scrute trop souvent une zone mémoire ou que plusieurs threads cherchent à scruter la même zone mémoire,
+on aboutit à des problématiques de contention de la mémoire, car la ligne de cache est invalidée plus souvent, ce qui entraîne un surcoût.
+Avec le polling nous somme donc contrains à respecter une granularité lié à la taille d'une ligne de cache.
+Utiliser les interruptions permettrait de ne plus avoir ce problème, car seul le thread concerné par une zone mémoire serait prévenu donc plus de contention à ce niveau.
+
 \subsection{BXI}
 
-\emph{BXI} pour "Bull eXascale Interconnect" est un type de réseau d'interconnexion (réseau haute performance) développé par \atos{}.
+\emph{BXI} \cite{7312662} pour "Bull eXascale Interconnect" est un type de réseau d'interconnexion (réseau haute performance) développé par \atos{}.
 Historiquement développé par \emph{Bull} qui a été racheté par \atos{}, ce réseau est dédié aux communications entre noeuds.
 Il est composé de cartes réseau \emph{BXI} et de switches \emph{BXI}.
 Les cartes \emph{BXI} sont capables de faire progresser les communications réseau sans aucune intervention du CPU (offload des communications réseau).
 Le CPU a juste à soumettre une commande dans une file sur la carte, et elle s'occupe de tout.
 Le CPU peut ensuite récupérer une file d'événements pour savoir ce qu'il s'est passé, en somme faire un poll.
 Les cartes sont également capables de déclencher des interruptions.
-Les cartes implémente donc l'API de communication \emph{Portal4}.
+Les cartes implémente donc l'API de communication \emph{Portal4} \cite{portals4}.
 Les utilisateurs utilisent donc cette API pour envoyer et recevoir des paquets réseau.
 
 % Une des extensions \emph{Portal4} de \emph{BXI} permettent d'enregistrer un handler à une queue d'évènement (PtlEQAllocAsync())
@@ -177,7 +187,7 @@ et des communications locales (shm pour "mémoire partagée", socket, self).
 \subsection{Les signaux}
 \label{sec:signal}
 
-Les signaux sont l'un des mécanismes permettant l'interface entre un processus et le système.
+Les signaux\cite{linuxSignalMan} sont l'un des mécanismes permettant l'interface entre un processus et le système.
 Pour cela, le processus utilisateur effectue des appels système pour définir les signaux pour lesquels il souhaite être notifié.
 Pour être notifié, l'utilisateur peut définir un handler pour chaque signal auprès du système.
 Ces handler sont déclenchés par le noyau qui prend en charge toutes les opérations nécessaires (sauvegarde de l'état du processus, changement de contexte, etc.).
@@ -209,3 +219,5 @@ Il est important d'avoir les définitions suivantes en tête :
   \item \emph{core logique}, \emph{processeur logique} ou \emph{unité de calcul} % (pu pour Process Unit) ou threads materiel
   désigne une unité de calcul au sein d'un coeur. Il y en a deux par core dans les CPUs \intel{} Sapphire Rapids fourni par \atos{}.
 \end{itemize}
+
+/* TODO: besoin d'expliquer ? : Un processus peut avoir plusieurs threads, un thread correspond à un fil d'execution de code. Et tous les threads au sien d'un même processus partage le même espace d'adressage virtuel. */
