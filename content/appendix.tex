@@ -45,6 +45,66 @@
   \label{fig:enableFeaturesInConfigMenu}
 \end{figure}
 
+\begin{lstlisting}[language=c, caption=Code récepteur, label={lst:receiverCode}]
+  #include <x86gprintrin.h>
+
+  #define VECTOR 6
+  bool isOver = 0;
+
+  __attribute__((target("general-regs-only")))
+  __attribute__((interrupt))
+  void ui_handler(struct __uintr_frame* ui_frame, unsigned long vector) {
+    /* Second clock_gettime() here */
+    printf("handler invoked (vector: %lld)\n", vector);
+
+    isOver = 1;
+  }
+
+  void receiver() {
+    if (uintr_register_handler(ui_handler, 0)) {
+      perror("interrupt handler register error");
+      exit(1);
+    }
+
+    _stui();
+
+    int uvec_fd = uintr_vector_fd(VECTOR, 0);
+    if (uvec_fd < 0) {
+      perror("vector fd error");
+      exit(1);
+    }
+
+    send_FD_to_sender(uvec_fd);
+
+    while (!isOver) continue;
+
+    if (uintr_unregister_handler(0))
+      perror("interrupt handler unregister error");
+    close(uvec_fd);
+  }
+\end{lstlisting}
+
+\begin{lstlisting}[language=c, caption=Code émetteur, label={lst:senderCode}]
+  #include <x86gprintrin.h>
+
+  void sender(pid_t targetPid) {
+    int uvec_fd = wait_to_receive_FD_from_receiver(targetPid);
+
+    long uipi_index = uintr_register_sender(uvec_fd, 0);
+    if (uipi_index < 0) {
+      perror("sender register error");
+      exit(1);
+    }
+
+    /* First clock_gettime() here */
+    _senduipi(uipi_index);
+
+    if (uintr_unregister_sender(uipi_index, 0))
+      perror("sender unregister error");
+    close(uvec_fd);
+  }
+\end{lstlisting}
+
 \begin{figure}[H]
   \includegraphics[width=\textwidth]{lstopoC4eUintr}
   \caption{Topologie de la machine fourni par \atos{} obtenus grâce à la command \emph{lstopo}}

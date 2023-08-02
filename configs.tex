@@ -64,8 +64,11 @@
   \newcommand{\code}[1]{\texttt{\detokenize{#1}}} % replace \verb|#1|
 \fi
 
+\DeclareRobustCommand\squelch[1]{%
+    \BeginAccSupp{method=plain,ActualText={}}#1\EndAccSupp{}}
+
 \newcommand*\circled[1]{\kern-2.5em%
-  \put(0,4){\circle{16}}%
+  \put(0,4){\squelch{\circle{16}}}%
   \put(-3,0){\bfseries\large#1}~~}
 
 \definecolor{codeGreen}{rgb}{0,0.6,0}
@@ -95,7 +98,7 @@
   numbers=left,
   numbersep=5pt,
   showspaces=false,
-  showstringspaces=true,
+  showstringspaces=false,
   showtabs=true,
   tabsize=4,
   extendedchars=true,

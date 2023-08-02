@@ -38,63 +38,82 @@ Les \uintr{} n'était pas connus des équipes \emph{Inria} et \atos{}.
 \subsubsection{Les interruptions}
 \label{sec:interrupts}
 
-Pour commencer nous allons voire comment les interruption matérielle fonctionnent.
-Nous allons nous concentrer sur l'envois d'interruption entre deux processus qui sont fixer sur deux unité de calcul.
-Pour fonctionné les CPU on une unité dédié au traitement des interruptions, l'APIC pour Advanced Programmable Interrupt Controller.
-Cette APIC permet au système d'enregistré un handler pour chaque interruptions.
-Pour ce faire le système définit un tableau \emph{IDT} (Interrupt Descriptor Table) qui contiens 256 entrées.
-Donc 256 interruptions possible, les valeurs entre 0 et 255 sont aussi appelé vecteur.
-Les vecteur compris entre 0 et 31 sont réservé pour les exceptions et interruption système, ce entre 32 et 127 sont réservé pour les interruptions pour les périphériques,
-128 est réservé pour les appel système et entre 129 et 255 pour des utilisation varier.
+
+Pour commencer, nous allons voire le fonctionnement des interruptions matérielles.
+Nous nous concentrerons sur l'envoi d'interruptions entre deux processus fixés sur deux unités de calcul.
+Pour ces interruptions les CPU disposent d'une unité dédiée à leur traitement, l'\emph{APIC} pour "Advanced Programmable Interrupt Controller".
+Cette \emph{APIC} permet au système d'enregistrer un handler pour chaque interruption.
+Le noyau définit un tableau appelé \emph{IDT} pour "Interrupt Descriptor Table" qui contient 256 entrées, correspondant à 256 interruptions possibles.
+Les indices de l'\emph{IDT} sont des valeurs comprises entre 0 et 255, que l'on appelle également \textbf{vecteur}s d'interruption.
+Parmi eux, les vecteurs entre 0 et 31 sont réservés pour les exceptions et les interruptions système,
+les vecteurs entre 32 et 127 sont dédiés aux interruptions liées aux périphériques,
+le vecteur 128 est réservé pour les appels système,
+et les vecteurs entre 129 et 255 sont destinés à des utilisations diverses.
 
 Il est important de savoir que chaque unité de calcul (processeur logique) possède un \emph{APIC ID} physique.
-Petit fun-fact le \emph{core ID} est un sous ensemble de l'\emph{APIC ID}.
+Petit fun-fact : le \emph{core ID} est un sous-ensemble de l'\emph{APIC ID}.
 
-Pour déclencher une interruption il y a quatre possibilités :
+Pour déclencher une interruption, il y a quatre possibilités :
 
 \begin{enumerate}
-  \item Une exceptions déclencher par un processeur (e.g. division par zero, défaut de segmentation...).
-  \item Une instruction comme \code{INT80 numSysCall} pour déclencher un appel système ou bien \code{INT3} pour définir un point d'arrêt, ou encore \code{INTO}, \code{BOUND} et \code{INT n}.
-  \item Des pins du CPU dédier à la réception d'interruption lancer à partir d'un périphérique.
-  \item Demander à l'APIC en lui même grâce à un registre \emph{ICR} pour Interrupt Command Register.
-  Il existe un \emph{ICR} par vecteur il faut donc écrire l'\emph{APIC ID} du destinataire dans le \emph{ICR} du vecteur que l'on veut déclencher.
-  Seul le CPU et le noyau peuvent modifier les \emph{ICR}.
+  \item Une exception déclenchée par un processeur (e.g. une division par zéro, un défaut de segmentation...).
+  \item Une instruction comme \code{INT80 numSysCall} pour déclencher un appel système, ou bien \code{INT3} pour définir un point d'arrêt, ou encore \code{INTO}, \code{BOUND} et \code{INT n}.
+  \item Des broches du CPU dédiées à la réception d'interruptions lancées à partir d'un périphérique.
+  \item Demander à l'\emph{APIC} elle-même grâce à un registre \emph{ICR} pour "Interrupt Command Register".
+  Il existe un \emph{ICR} par vecteur, donc il faut écrire l'\emph{APIC ID} du destinataire dans le \emph{ICR} du vecteur que l'on veut déclencher.
+  Seul le CPU et le noyau peuvent modifier les \emph{ICR}. % TODO: est peut être les périphérique non ?
 \end{enumerate}
 
-On vois bien que les IRQ fonctionne au niveau du noyau et du CPU.
+On voit bien que les \emph{IRQ} fonctionnent au niveau du noyau et du CPU.
 
-Nous allons voir un exemple d'envoi d'IRQ entre 2 processus en cours d'exécution.
-Tous d'abord l'initialisation ce fait au démarrage du système et consiste principalement à définir les handler noyau dans l'\emph{IDT}.
-Au préalable il faut définir le vecteur utiliser, le handler noyau, la technique pour contacté le système et l'identification du récepteur (e.g. par un patch du noyau, par un module noyau...).
+Nous allons voir un exemple d'envoi d'\emph{IRQ} entre deux unités de calcul en cours d'exécution.
+Tout d'abord, l'initialisation des \emph{IRQ} se fait au démarrage du système et consiste principalement à définir les handlers noyau dans l'\emph{IDT}.
+Il faut aussi définir quel vecteur nous voulons utiliser, le code du handler noyau qui sera invoqué,
+comment l'utilisateur va contacter le système et comment faire l'identification du récepteur.
+Pour cela, on peut appliquer un patch au noyau ou faire un module noyau.
 
-Nous allons maintenant voir les états de l'envois d'une IRQ montré sur la figure suivante \ref{fig:sendInt} :
+Dans notre exemple, nous allons supposer que nous avons déjà patché le noyau en ajoutant des appels système et que nous avons choisi un vecteur.
+
+Nous allons maintenant voir les étapes de l'envoi d'une \emph{IRQ}, illustrées sur la figure \ref{fig:sendInt} :
 
 \begin{enumerate}[label=\protect\circled{\arabic*}]
-  \item Le récepteur fait un appel système pour indiquer au noyau comment il veut être avertie d'une interruption (e.g. un handler utilisateur, un descripteur de fichiers qu'il vas lire, un appel système bloquante, une zone mémoire où écrire...).
-  \item l'émetteur peut donc avertir le noyau qu'il fau envoyer une interruption pour cela il peut utiliser un appel système ou écrire dans un descripteur de fichiers...
-  \item Le noyau détermine l'unité de calcule ou ce trouve le récepteur. Pour cela il peut utiliser par exemple un \emph{PID} (Processus ID) donné par l'émetteur ou autre.
-  Il vas donc pouvoir déterminer le \emph{APIC ID} de unité de calcul à interrompre.
-  \item Le noyau écrit donc l'\emph{APIC ID} dans le \emph{ICR} d'un vecteur déterminer à l'avance. L'émetteur vas reprendre la main après un autre changement de contexte.
-  \item L'APIC vas donc interrompre le récepteur qui vas donc stoppé sont exécution est passer dans le noyau.
-  Une fois dans le noyau le handler vas ce déclencher et exécuté le code prévue au préalable (déclenchement d'un handler utilisateur, écrire dans un descripteur de fichiers, écrire dans une zone mémoire...).
+  \item Le récepteur fait un appel système pour indiquer au noyau comment il veut être averti d'une interruption (e.g. un descripteur de fichiers qu'il va lire, un appel système bloquant, une zone mémoire où lire, un handler utilisateur, etc.).
+  \item L'émetteur peut donc avertir le noyau qu'il faut envoyer une interruption.
+  Pour cela, il peut utiliser un appel système ou écrire dans un descripteur de fichiers, par exemple.
+  \item Le noyau détermine l'unité de calcul où se trouve le récepteur.
+  Pour cela, il peut utiliser par exemple un \emph{PID} pour "Processus ID" donné par l'émetteur ou autre.
+  Ainsi, il peut déterminer l'\emph{APIC ID} de l'unité de calcul à interrompre.
+  \item Le noyau écrit donc l'\emph{APIC ID} dans le \emph{ICR} d'un vecteur déterminé à l'avance.
+  L'émetteur reprend alors la main après un autre changement de contexte.
+  \item L'\emph{APIC} va donc interrompre le récepteur qui va alors stopper son exécution et passer dans le noyau.
+  Une fois dans le noyau, le handler va se déclencher et exécuter le code prévu au préalable (écriture dans un descripteur de fichiers, écriture dans une zone mémoire, déclenchement d'un handler utilisateur, etc.).
 \end{enumerate}
 
 \begin{figure}[H]
   \includegraphics[width=\textwidth]{interruptSend}
-  \caption{L'envois d'une interruption}
+  \caption{L'envoi d'une interruption ordinaire}
   \label{fig:sendInt}
 \end{figure}
 
-Lors du déclenchement du handler noyau certain registres actuelle sont sauvegardé comme le pointeur de pile \code{RSP}, le registre d'états \code{RFLAGS}, le registre \code{CS} et le registre de pointeur d'instruction \code{RIP}.
-Cette sauvegarde ce fait en les empilant dans une nouvelle pile. Le vecteur de l'interruption est aussi empilé en temps que code erreur \emph{errorCode}.
-Une fois que le handler noyau a fini de s'exécuter il doit faire l'instruction \code{iret} qui a pour effet de dépilé les registre sauvegardé et de les restorer.
+Lors du déclenchement du handler noyau, certains registres actuels sont sauvegardés,
+tels que le pointeur de pile \code{RSP},
+le registre d'états \code{RFLAGS},
+le registre \code{CS} et le registre de pointeur d'instruction \emph{RIP}.
+Cette sauvegarde est réalisée en les empilant dans une nouvelle pile.
+Le vecteur de l'interruption est aussi empilé en tant que code erreur (\emph{errorCode}).
 
-Il est possible de masquer les interruptions grâce à deux instructions utilisable seulement par le noyau qui sont \code{clui} et \code{stui}.
-Ces interruption modifie un flag (\emph{IF}) qui ce trouve dans le registre d'états de l'unité de calcul \code{RFLAGS} (aussi nommé \code{EFLAGS} sur les architecture 32bits).
-La liste des instructions pour les IRQ ce trouve ici\ref{tab:interruptInstructions}.
+Une fois que le handler noyau a fini de s'exécuter,
+il doit exécuter l'instruction \code{iret} qui a pour effet de dépiler les registres sauvegardés et de les restaurer.
 
-Comme on la vue ce mécanisme fonctionne totalement dans le noyau du système.
-Dans notre exemple il faut au minimum deux changement de contexte (context switch) pour le récepteur et l'émetteur et même peut être plus si le récepteur dois déclenché un handler coté utilisateur.
+Il est possible de masquer les interruptions grâce à deux instructions utilisables seulement par le noyau,
+qui sont \code{cli} et \code{sti}.
+Ces instructions permettent de modifier le flag \emph{IF} pour "Interrupt Flag" qui se trouve dans le registre d'états de l'unité de calcul,
+\code{RFLAGS} (aussi nommé \code{EFLAGS} sur les architectures 32 bits).
+La liste des instructions pour les \emph{IRQ} se trouve dans le tableau \ref{tab:interruptInstructions}.
+
+Comme nous l'avons vu, ce mécanisme fonctionne totalement dans le noyau du système.
+Dans notre exemple, il faut au minimum deux changements de contexte (context switch) pour le récepteur et l'émetteur,
+et peut-être même plus si le récepteur doit déclencher un handler côté utilisateur.
 
 % Il fau noté que les registre 32 bit commance par un E et les 64 bit par un R (ex: EIP et RIP).
 % RIP is Register Instructions Pointer, RFLAGS is Register with all core FLAGS (OF, CF, IF...), RSP is Register Stack Pointer, CS is Code Section, IF is Interrupt Flag store in EFLAGS
@@ -102,18 +121,25 @@ Dans notre exemple il faut au minimum deux changement de contexte (context switc
 \subsubsection{Les uintr}
 \label{sec:uintrDetails}
 
-Le mécanisme d'interruption en espace utilisateur est utilise cinque nouvelle instructions qui sont listé dans le tableau suivant \ref{tab:interruptInstructions}.
-Les deux premiers, \code{clui} et \code{stui}, permet le masquage des interruption, en effet comme pour les interruptions ordinaire qui on un flag \emph{IF} pour Interrupt Flag les uintr on un flag \emph{UIF} pour User Interrupt Flag.
-l'instruction suivant \code{testui} permet à l'utilisateur de savoir si les interruption sont masquer ou non.
-Cette instruction existe car l'utilisateur n'a pas accès directement au \emph{UIF} contrairement au interruption ordinaire ou le noyau a lui accès directement au \emph{IF}.
-L'instruction suivant \code{uiret} fonctionne comme celle des interruption ordinaire (\code{iret}) mais pas avec les même registre et surtout elle est utilisable en espace utilisateur.
-La dernier instruction permet d'envoyer une uintr grâce à un indice que nous allons voir dans cette section \ref{sec:exemple}.
+Le mécanisme d'interruption en espace utilisateur utilise cinq nouvelles instructions qui sont listées dans le tableau suivant \ref{tab:interruptInstructions}.
+Les deux premières, \code{clui} et \code{stui} qui sont analogues à \code{cli} et \code{sti},
+permettent le masquage des interruptions.
+En effet, tout comme les interruptions ordinaires qui ont un flag \emph{IF} pour activer ou désactiver les interruptions,
+les \uintr{} ont un flag \emph{UIF} pour "User Interrupt Flag".
+L'instruction suivante, \code{testui}, permet à l'utilisateur de savoir si les interruptions sont masquées ou non.
+Cette instruction existe car l'utilisateur n'a pas accès directement au \emph{UIF},
+contrairement aux interruptions ordinaires qui ont un accès direct à \emph{IF} puisqu'elles fonctionnent dans le noyau.
+
+L'instruction suivante, \code{uiret}, fonctionne de manière similaire à celle des interruptions ordinaires (\code{iret}),
+mais elle n'utilise pas les mêmes registres et surtout elle est utilisable en espace utilisateur.
+Enfin, la dernière instruction permet d'envoyer une \uintr{} en utilisant un indice, que nous allons voir dans la section \ref{sec:exemple}.
 
 \begin{table}[H]
   \centering
+  \resizebox{\columnwidth}{!}{%
   \begin{tabular}{|m{.5\textwidth}|m{.5\textwidth}|}
     \hline
-    \bf Interruption & \bf Interruption utilisateur\\
+    \bf Interruption (IRQ) & \bf Interruption utilisateur (\uintr{})\\
     \hline
     cli (\textbf{CL}ear \textbf{I}F) & clui (\textbf{CL}ear \textbf{UI}F)\\
     \hline
@@ -121,45 +147,50 @@ La dernier instruction permet d'envoyer une uintr grâce à un indice que nous a
     \hline
     & testui (Read \textbf{UI}F)\\
     \hline
-    iret (Interrupt RETurn) & uiret (User Interrupt RETurn)\\
+    iret (\textbf{I}nterrupt \textbf{RET}urn) & uiret (\textbf{U}ser \textbf{I}nterrupt \textbf{RET}urn)\\
     \hline
     APIC pins, APIC ICR, \code{INT n}, \code{INT3}, \code{INTO}, \code{BOUND} et \code{INT80 n} & sendipi <uipi_index>\\
     \hline
     % \multicolumn{2}{|c|}{...} \\
     % \hline
-  \end{tabular}
-  \caption{Instructions des interruption et interruption en espace utilisateur}
+  \end{tabular}%
+  }
+  \caption{Instructions des interruptions et des interruptions en espace utilisateur}
   \label{tab:interruptInstructions}
 \end{table}
 
-Le mécanisme arrive aussi avec six nouveaux \emph{registres d'états}, des registres \emph{MSR} pour Model-specific registers.
-Ces registres sont modifier par le noyau grâce à des appels système que l'utilisateur fait pour initialiser les uintr et utiliser par le CPU.
-Ils sont décrit dans le tableau suivant\ref{tab:uintrStateRegisters} et nous expliciterons leur utilité par la suite.
+Le mécanisme est également accompagné de six nouveaux \emph{registres d'états}, appelés registres \emph{MSR} pour "Model-Specific Registers".
+Ces registres sont modifiés par le noyau grâce à des appels système que l'utilisateur effectue pour initialiser les \uintr{} et sont utilisés par le CPU.
+Le tableau \ref{tab:uintrStateRegisters} décrit ces registres, et nous expliquerons leur utilité par la suite.
 
 \begin{table}[H]
   \centering
-  \begin{tabular}{|p{.5\textwidth}|p{.5\textwidth}|}
+  \resizebox{\columnwidth}{!}{%
+  \begin{tabular}{|p{.45\textwidth}|p{.55\textwidth}|}
     \hline
     \bf Nom du registre & \bf Description\\
     \hline
     IA32_UINTR_STACKADJUST & Utilisé par le récepteur pour définir l'adresse de la pile alternative\\ % remplacé "définir" par "que l'unité de calcule connaisse"
     \hline
-    IA32_UINTR_HANDLER & Utilisé par le récepteur pour définir l'adresse du handler uintr\\
+    IA32_UINTR_HANDLER & Utilisé par le récepteur pour définir l'adresse du handler \uintr{}\\
     \hline
-    IA32_UINTR_MISC & Utilisé par l'émetteur pour définir la taille de la \emph{UITT} et
-    par le récepteur pour que l'APIC connaisse le vecteur d'interruption ordinaire qu'il dois reconnaître pour déclencher le handler uintr
-    et le dernier bit pour le flag de masquage \emph{UIF}\\
+    IA32_UINTR_MISC & Utilisé par l'émetteur pour définir la taille du \emph{UITT} et
+    par le récepteur pour que l'\emph{APIC} connaisse le vecteur d'interruption ordinaire
+    qu'il dois reconnaître pour déclencher le handler \uintr{}
+    et le dernier bit, pour le flag de masquage \emph{UIF}\\
     \hline
     IA32_UINTR_PD & Utilisé par le récepteur pour définir l'adresse du \emph{UPID}\\
     \hline
-    IA32_UINTR_RR & Utilisé par l'APIC pour \textit{lister} les vecteurs uintr qu'il dois envoyer au récepteur\emph{UPID}\\
+    IA32_UINTR_RR & Utilisé par l'\emph{APIC} pour \textit{lister} les vecteurs \uintr{} qu'il doit envoyer au récepteur.
+    Correspond aux derniers 64 bits du \emph{UPID}\\
     \hline
-    IA32_UINTR_TT & Utilisé par l'émetteur pour définir l'adresse de la \emph{UITT}\\
+    IA32_UINTR_TT & Utilisé par l'émetteur pour définir l'adresse du \emph{UITT}\\
     \hline
     % \multicolumn{2}{|c|}{...} \\
     % \hline
-  \end{tabular}
-  \caption{Liste des six registre d'états des uintr}
+  \end{tabular}%
+  }
+  \caption{Liste des six registres d'états des \uintr{}}
   \label{tab:uintrStateRegisters}
 \end{table}
 
@@ -168,70 +199,102 @@ Ils sont décrit dans le tableau suivant\ref{tab:uintrStateRegisters} et nous ex
 % uintr invoked (push oldRSP, RFLAGS, RIP, UIRRV)
 % uiret (pop UIRRV, RIP, RFLAGS, oldRSP)
 
-\subsubsection{Capacités présente et futur}
+\subsubsection{Capacités présentes et futures}
 
-Le mécanisme a une interface pour l'utilisateur similaire aux signaux \ref{sec:signal}.
-Nous allons donc voir les capacités des uintr par comparaison à celle des signaux.
+Le mécanisme d'interruption en espace utilisateur a une interface pour l'utilisateur similaire aux signaux \ref{sec:signal}.
+Nous allons donc voir les capacités des \uintr{} en les comparant à celles des signaux.
+Tout d'abord, le fonctionnement des \uintr{} se fait au niveau des threads,
+tandis que celui des signaux se fait au niveau du processus.
+Il est possible d'avoir un fonctionnement qui se rapproche d'un fonctionnement par threads en utilisant plusieurs options.
 
-Tous d'abord le fonction des uintr ce fait au niveau des threads que les signaux le fonctionnement ce fait au niveau du processus.
-Il est possible d'avoir un fonctionnement qui ce rapproche d'un fonctionnement par threads avec plusieurs options.
+Avec les \uintr{}, il est possible de définir un handler différent pour chaque thread d'un processus,
+alors que pour les signaux, on peut définir un seul handler pour tous les threads d'un processus.
+Par contre, avec les signaux, il est possible de définir un handler différent pour chaque signal,
+ce qui n'est pas possible avec les \uintr{}.
+Pour les \uintr{}, il faut gérer cette différenciation manuellement en appelant la fonction correspondant au vecteur reçu.
+%(le vecteur c'est une valeur qui est similaire au numéro de signal)
 
-Avec les uintr il est possible de définir une handler différant par threads d'un processus que pour les signaux il est possible de définir un seul handler pour tous les threads d'un processus.
-Par-contre les signaux permet de définir un handler différant par signal se qui n'est pas possible avec les uintr, il faut le faire nous même en appelant la fonction qui correspond au vecteur reçus. %(le vecteur c'est une valeur qui est similaire au numéro de signal)
+Il existe 64 signaux possibles, parmi lesquels les 32 premiers ont une signification particulière.
+En revanche, pour les \uintr{}, il existe également 64 vecteurs possibles, entre 0 à 63, qui n'ont aucune signification particulière par défaut.
 
-Il exit 64 signaux possible avec les 32 premiers qui on on signification, pour les uintr il existe aussi 64 vecteurs possible entre 0 et 63 qui n'ont aucune signification par défaut.
+Pour les \uintr{}, le masquage se fait via une instruction, tandis que pour les signaux, il faut effectuer un appel système pour les masquer.
 
-Pour les uintr le masquage ce fait via une instruction que pour les signaux il faut faire un appel système.
+L'envoi d'un signal se fait par le noyau suite à une exception, une décision du noyau ou la demande d'un processus grâce à un appel système (\code{kill(signum)} ou \code{tgkill(signum)}).
+Pour les \uintr{}, l'envoi peut se faire depuis un autre processus ou depuis le noyau, et dans le futur, il pourra également se faire depuis un périphérique.
 
-L'envois d'un signal ce fait par le noyau suite à une exceptions, une décision du noyau ou la demande d'un processus grâce à un appel système (\code{kill(signum)} ou \code{tgkill(signum)}).
-Pour les uintr l'envoi peut ce faire depuis un autre processus ou depuis le noyau et dans le future pourra ce faire depuis un périphériques.
+Avec les signaux, le handler peut être déclenché que le processus cible soit endormi ou non, tandis que pour les \uintr{}, c'est différent.
+Il faut que le thread soit en espace utilisateur pour recevoir une interruption.
+Sinon, l'interruption sera reçue quand le thread revient en espace utilisateur.
+On a vu précédemment, dans les prérequis, section \ref{requirements}, qu'une fonctionnalité existe lors de la compilation du noyau pour autoriser l'interruption d'un thread bloqué.
+Si la fonctionnalité est activée, il est donc possible d'interrompre un thread qui n'est pas ordonnancé ou qui est en train de faire un appel système interruptible,
+et ainsi le passer en espace utilisateur pour qu'il puisse recevoir l'interruption. % tâche interruptible c'est plus précis mais il faut le mettre dans le contexte
+Pour utiliser cette fonctionnalité, l'utilisateur doit renseigner un flag au moment de définir le handler.
 
-Avec les signaux le handler peut être déclenché que le processus cible soit endormi ou non pour les uintr c'est différant.
-Il faut que le thread sois en espace utilisateur pour recevoir une interruption sinon l'interruption sera reçus quand le thread revient en espace utilisateur.
-On a vue plutôt, dans les prérequis\ref{requirements}, qu'une fonctionnalité existe à la compilation du noyau pour autorisé l'interruption d'un thread bloqué.
-Si la fonctionnalité est activé il est donc possible d'interrompre un thread qui n'est pas ordonnancer ou qui est entrain de faire un appel système interruptible et donc le passé en espace utilisateur pour qu'il puisse recevoir l'interruption. % tâche interruptible c'est plus précis mais il faut le mettre dans le contexte
-Pour utilisé cette fonctionnalité l'utilisateur dois renseigné un flag au moment de définir le handler.
-Il existe donc trois flags, le premier \code{UINTR_HANDLER_FLAG_WAITING_ANY} qui active la fonctionnalité et les deux autre qui s'ajoute au précédent et précise si c'est l'émetteur ou le récepteur qui vas prendre le surcoût du passage dans le noyau.
-Les flags sont \code{UINTR_HANDLER_FLAG_WAITING_RECEIVER} et \code{UINTR_HANDLER_FLAG_WAITING_SENDER}.
-
-Pour les signaux le déclenchement du handler est géré par le noyau qui vas sauvegarde de l'états du processus, définir une pile alternative si besoin, changer de contexte et appelé le handler utilisateur.
-Pour les uintr le déclenchement du handler est fait par le CPU, il est donc très sommaire :
+Il existe donc trois flags :
 \begin{itemize}
-  \item changer la pile si une pile alternative est disponible dans le registre \code{IA32_UINTR_STACKADJUST}
-  \item empiler l'ancien pointeur de pile, le registre d'états de l'unité de calcul, le registre de pointeur d'instruction \code{RIP} et le vecteur uintr
-  \item aller à l'adresse du handler utilisateur disponible dans le registre\\
-  \code{IA32_UINTR_HANDLER}
+  \item \code{UINTR_HANDLER_FLAG_WAITING_ANY} qui active la fonctionnalité,
+  \item \code{UINTR_HANDLER_FLAG_WAITING_RECEIVER} et\\
+  \code{UINTR_HANDLER_FLAG_WAITING_SENDER}
+  qui s'ajoutent au précédent pour préciser si c'est l'émetteur ou le récepteur qui prendra en charge le surcoût du passage par le noyau.
+  % on passe par le noyau mais je ne sais pas si le surcoût et lier à l’ordonnancement, au context switch, au handler noyau en plus ou tous à la fois.
 \end{itemize}
-C'est donc à l'utilisateur qu'appartient la responsabilité de la sauvegarde des registres généraux, des registres vectoriel (SIMD)... et des les restorer à la sortie du handler.
-Le compilateur permet déjà de faire la sauvegarde des registres généraux avec le flag \code{general-regs-only} par-contre pour les registres vectoriel il faut les sauvegardé avant de les utilisé.
-Il faut faire attention aux operations sur les chaîne de caractère de la \emph{libc} car \code{memcpy}, \code{memmove}, \code{memset} et \code{memcmp} utilise des registres vectoriel par défaut.
-Le compilateur fournis le flag \code{-minline-all-stringops} qui permet d'inline\footnote{besoin d'expliqué l'inline?} ces opérations pour ne plus utiliser de registre vectoriel.
 
-Une fois que le handler à fini sont execution il faut s'occuper du retour. Pour les signaux c'est le noyau qui s'en occupe et pour les uintr il faut que l'utilisateur utilise l'instruction \code{uiret}.
-Donc l'unité de calcul vas dépilé le vecteur, les registers qui suivent pour les restorer ce qui vas permettre au code de continuer là où il en été.
+Pour les signaux, le déclenchement du handler est géré par le noyau qui sauvegarde l'état du processus, définit une pile alternative si besoin, change de contexte et appelle le handler utilisateur.
+Pour les \uintr{}, le déclenchement du handler est effectué par le CPU, il est donc très sommaire :
+\begin{itemize}
+  \item changer la pile si une pile alternative est disponible dans le registre \code{IA32_UINTR_STACKADJUST},
+  \item empiler l'ancien pointeur de pile, le registre d'états de l'unité de calcul,
+  le registre de pointeur d'instruction \code{RIP} et le vecteur \uintr{} % UIRRV
+  \item aller à l'adresse du handler utilisateur disponible dans le registre\\
+  \code{IA32_UINTR_HANDLER}.
+\end{itemize}
+C'est donc à l'utilisateur qu'appartient la responsabilité de sauvegarder les registres généraux,
+les registres vectoriels (SIMD)... et de les restaurer à la sortie du handler.
+Le compilateur permet déjà de sauvegarder les registres généraux avec le flag \code{general-regs-only}.
+Cependant, pour les registres vectoriels, il faut les sauvegarder avant de les utiliser.
+Il faut faire attention avec les opérations sur les chaînes de caractères de la \emph{libc} car les
+fonctions \code{memcpy}, \code{memmove}, \code{memset} et \code{memcmp} utilisent des registres vectoriels par défaut.
+Le compilateur fournit le flag \code{-minline-all-stringops} qui permet de les remplacer par des versions inline
+de ces opérations afin de ne plus utiliser de registres vectoriels. % besoin d'expliqué l'inline ?
 
-Que ce sois dans un handler de signal ou dans un handler d'interruption utilisateur on a la même contrainte, on ne peu pas faire d'attente donc on peut seulement appeler le fonction et appel système dit \emph{async safe}.
+Une fois que le handler a fini son exécution, il faut s'occuper du retour.
+Pour les signaux, c'est le noyau qui s'en occupe, tandis que pour les \uintr{},
+il incombe à l'utilisateur d'utiliser l'instruction \code{uiret}.
+Donc, l'unité de calcul va dépiler le vecteur et les registres qui suivent pour les restaurer, ce qui permettra au code de continuer là où il en était.
+
+Que ce soit dans un handler de signal ou dans un handler d'interruption utilisateur, on a la même contrainte :
+on ne peut pas faire d'attente, donc on peut seulement appeler des fonctions et des appels système dits "async safe".
 
 \subsubsection{Exemple de fonctionnement}
 \label{sec:exemple}
 
-Nous allons maintenant voir un example d'initialisation des unitr montré sur la figure suivante \ref{fig:initUintr} :
+Nous allons maintenant voir un exemple d'initialisation des \uintr{} illustré sur la figure \ref{fig:initUintr} :
 
 \begin{enumerate}[label=\protect\circled{\arabic*}]
-  \item Le récepteur enregistre au prés du noyau un handler d'interruption qu'il a défini avec l'appel système \code{uintr_register_handler(ui_handler)}.
-  Le noyau vas enregistré ce handler dans le registre \code{IA32_UINTR_HANDLER} et vas initialiser une zone mémoire nommé \emph{UPID} pour User Posted Interrupt Descriptor.
-  Ce \emph{UPID} permet au mécanisme des uintr de manipuler des informations propre à ce thread qui sont essentielle pour l'envoi d'uintr.
-  Il est enregistré dans le registre \code{IA32_UINTR_PD}.
-  \item Le récepteur donne au noyau un vecteur uintr entre 0 et 63 qu'il veut recevoir, 8 dans la figure, avec l'appel système \code{uvec_fd <- uintr_vector_fd(8)}. Le noyau lui retourne un descripteur de fichier qui pointe vers une structure qui possède à la fois le vecteur et l'adresse du \emph{UPID}.
-  \item Le récepteur envois ce descripteur de fichier aux émetteurs potentielle, un seul dans notre cas. Nous verrons comment partagé ce descripteur de fichier dans une section dédier\ref{sec:shareFD}.
-  \item L'émetteur vas s'enregistrer au prés du noyau grâce au descripteur de fichier, avec l'appel système \code{uipi_index <- uintr_register_sender(uvec_fd)}.
-  Pour ce faire le noyau possède un tableau \emph{UITT} pour User Interrupt Target Table qui fait une taille de 256 entré par défaut.
-  L'adresse de ce tableau dois être enregistré dans le registre \code{IA32_UINTR_TT} avec ça taille dans les quatre premier octets du registre \code{IA32_UINTR_MISC}, on peut donc faire varier la taille de ce tableau.
-  Chaque entrées de ce tableau consiste en une zone mémoire nommé \emph{UITTE} pour User Interrupt Target Table Entry.
-  Le noyau vas donc trouvé une entré libre dans le \emph{UITT} et renseigné l'\emph{UITTE} avec le vecteur uintr et l'adresse du \emph{UPID} obtenu grâce au descripteur de fichier.
-  Il vas aussi mettre une vecteur d'interruption ordinaire dans le cinquième octet du registre \code{IA32_UINTR_MISC}, ce vecteur "ordinaire" est une nouvelle \emph{IRQ} dédier pour les uintr et à pour valeur 236.
+  \item Le récepteur enregistre auprès du noyau un handler d'interruption qu'il a défini à l'aide de l'appel système\\
+  \code{uintr_register_handler(ui_handler)}.
+  Le noyau va enregistrer ce handler dans le registre \code{IA32_UINTR_HANDLER} et va initialiser une zone mémoire nommée \emph{UPID} pour "User Posted Interrupt Descriptor".
+  Ce \emph{UPID} permet au mécanisme des \uintr{} de manipuler des informations propres à ce thread, essentielles pour l'envoi d'\uintr{}.
+  L'adresse du \emph{UPID} est enregistré dans le registre \code{IA32_UINTR_PD}.
+  \item Le récepteur donne au noyau un vecteur \uintr{} entre 0 et 63 qu'il souhaite recevoir (8 dans la figure),
+  à l'aide de l'appel système\\
+  \code{uvec_fd <- uintr_vector_fd(8)}.
+  Le noyau lui renvoie un descripteur de fichier qui pointe vers une structure contenant à la fois le vecteur et l'adresse du \emph{UPID}.
+  \item Le récepteur envoie ce descripteur de fichier aux émetteurs potentiels, un seul dans notre cas.
+  Nous verrons comment partager ce descripteur de fichier dans la section \ref{sec:shareFD}.
+  \item L'émetteur va s'enregistrer auprès du noyau grâce au descripteur de fichier en appelant l'appel système\\
+  \code{uipi_index <- uintr_register_sender(uvec_fd)}.
+  Pour ce faire, le noyau possède un tableau \emph{UITT} pour "User Interrupt Target Table" qui fait une taille de 256 entrées par défaut.
+  L'adresse de ce tableau doit être enregistrée dans le registre \code{IA32_UINTR_TT},
+  et sa taille doit être placée dans les quatre premiers octets du registre \code{IA32_UINTR_MISC}.
+  Ainsi, la taille du \emph{UITT} peut varier en fonction des besoins.
+  Chaque entrée de ce tableau \emph{UITT} correspond à une zone mémoire nommée \emph{UITTE} pour "User Interrupt Target Table Entry".
+  Le noyau va rechercher une entrée libre dans le \emph{UITT} et remplir l'\emph{UITTE} avec le vecteur \uintr{} et
+  l'adresse du \emph{UPID} obtenus grâce au descripteur de fichier.
+  Il va également mettre un vecteur d'interruption ordinaire dans le cinquième octet du registre \code{IA32_UINTR_MISC},
+  ce vecteur "ordinaire" étant dédié aux \uintr{} et a pour valeur 236.
   Pour finir il retourne l'indice de l'entré à l'émetteur.
-  \item L'utilisateur peut maintenant envoyer autant d'interruption totalement depuis l'espace utilisateur.
+  \item L'utilisateur peut maintenant envoyer autant d'interruptions que nécessaire, totalement depuis l'espace utilisateur.
 \end{enumerate}
 
 \begin{figure}[H]
@@ -240,90 +303,112 @@ Nous allons maintenant voir un example d'initialisation des unitr montré sur la
   \label{fig:initUintr}
 \end{figure}
 
-
-Maintenant que nous avons vue l'initialisation nous allons pouvoir voire comment l'envois d'interruption ce fait avec la figure suivante \ref{fig:sendUintr} :
+Maintenant que nous avons vu l'initialisation, nous allons pouvoir voir comment l'envoi d'interruption est réalisé, comme illustré dans la figure \ref{fig:sendUintr} :
 
 \begin{enumerate}[label=\protect\circled{\arabic*}]
-  \item L'émetteur vas utiliser l'instruction \code{senduipi} avec l'indice récupéré au moment de l'initialisation.
-  L'utilité de calcul vas donc pouvoir récupéré l'adresse de l'\emph{UPID} et le vecteur uintr à envoyer du récepteur grâce au tableau \emph{UITT} qui ce trouve dans le registre \code{IA32_UINTR_TT} et grâce à l'indice donné à l'instruction.
-  Il vas aussi pouvoir verifier que l'indice ce trouve bien dans le tableau, avec \code{IA32_UINTR_MISC}, et que l'entré est valide.
-  Dans la zone mémoire de l'\emph{UPID} il vas pouvoir écrire le vecteur uintr envoyer et il vas déterminer si il faut envoyer une interruption ordinaire.
-  En effet les interruption en espace utilisateur utilise les interruption ordinaire.
-  L'envoi de celle-ci dépende de si une interruption ordinaire n'a pas déjà été envoyer.
-  Dans notre cas on vas considéré que c'est le premiere envois.
-  \item Donc l'émetteur vas récupéré le vecteur d'interruption ordinaire dans le registre \code{IA32_UINTR_MISC} et sélectionner le \emph{ICR} correspond au vecteur ordinaire.
-  Puis il vas récupéré l'\emph{APIC ID} dans l'\emph{UPID} et l'écrire dans le registre \emph{ICR}.
-  \item L'\emph{APIC} vas réceptionné l'interruption, elle vas comparé le vecteur d'interruption ordinaire reçus avec celui qui ce trouve dans l'\emph{UPID} qu'il connais grâce au registre \code{IA32_UINTR_PD}.
-  Si il sont identique l'\emph{APIC} vas pourvoir déclencher le système de traitement des uintr sinon elle vas utiliser le mécanisme habituelle des \emph{IRQ}.
-  \item Le système de traitement des uintr vas donc indiquer dans l'\emph{UPID} que l'interruption ordinaire a déjà été envoyer puis vas commancer le déclenchement des handler pour tous les vecteur uintr reçus en partent du plus grand, 63, au plus petite, 0. % c'est ici que IA32_UINTR_RR est utilisé
-  Dans notre example on en a un seul qui est 8.
-  L'\emph{APIC} vas donc ordonné à l'unité de calcule de changer de pile si alternative est disponible dans
-  le registre \code{IA32_UINTR_STACKADJUST}, empiler les registres nécessaire, empiler le vecteur uintr (donc 8 dans l'example) et aller à l'adresse du handler qui est disponible dans le registre \code{IA32_UINTR_HANDLER}.
+  \item L'émetteur utilise l'instruction \code{senduipi} avec l'indice récupéré lors de l'initialisation.
+  L'unité de calcul peut accéder au tableau \emph{UITT} qui se trouve dans le registre \code{IA32_UINTR_TT}.
+  Elle peut vérifie que l'indice se trouve bien dans le tableau, en utilisant la taille qui se trouve dans le registre \code{IA32_UINTR_MISC}.
+  De plus, il s'assure que l'entrée dans le \emph{UITT} est valide.
+  À partir de l'indice donné à l'instruction, l'émetteur peut récupérer l'adresse de l'\emph{UPID} et le vecteur \uintr{} à envoyer au récepteur.
+  Dans la zone mémoire de l'\emph{UPID}, il écrit le vecteur \uintr{} à envoyer et détermine s'il faut également envoyer une interruption ordinaire.
+  En effet, les interruptions en espace utilisateur utilisent les interruptions ordinaires,
+  et l'envoi de celles-ci dépend de si une interruption ordinaire n'a pas déjà été envoyée.
+  Dans notre cas, nous considérons que c'est le premier envoi.
+  \item Donc, l'émetteur va récupérer le vecteur d'interruption ordinaire dans le registre \code{IA32_UINTR_MISC} et
+  sélectionner le registre \emph{ICR} correspondant au vecteur "ordinaire".
+  Ensuite, il va récupérer l'\emph{APIC ID} dans l'\emph{UPID} et l'écrire dans le registre \emph{ICR}.
+  Cela permettra d'envoyer l'interruption ordinaire à l'unité de calcul correspondante.
+  \item L'\emph{APIC} va recevoir l'interruption, puis elle va comparer le vecteur d'interruption ordinaire reçu avec celui qui se trouve dans l'\emph{UPID}, qu'il connaît grâce au registre \code{IA32_UINTR_PD}.
+  Si les vecteurs sont identiques, l'\emph{APIC} va pouvoir déclencher le système de traitement des \uintr{}, sinon, elle va utiliser le mécanisme habituel des \emph{IRQ}.
+
+  \item Le système de traitement des \uintr{} va donc indiquer dans l'\emph{UPID} que l'interruption ordinaire a déjà été envoyée,
+  puis va commencer le déclenchement des handlers pour tous les vecteurs \uintr{} reçus, en partant du plus grand, 63, jusqu'au plus petit, 0.
+  \code{IA32_UINTR_RR} est utilisé à cette étape.
+  Dans notre exemple, nous en avons un seul qui est 8.
+  L'\emph{APIC} va donc ordonner à l'unité de calcul de changer de pile si une pile alternative est disponible dans
+  le registre \code{IA32_UINTR_STACKADJUST}, empiler les registres nécessaires, empiler le vecteur \uintr{} (donc 8 dans l'exemple) et aller à l'adresse du handler qui est disponible dans le registre \code{IA32_UINTR_HANDLER}.
 \end{enumerate}
 
 \begin{figure}[H]
   \includegraphics[width=\textwidth]{uintrSend}
-  \caption{L'envois d'une uintr}
+  \caption{L'envoi d'une \uintr{}}
   \label{fig:sendUintr}
 \end{figure}
 
-Le fait d'utiliser le mécanisme habituelle des \emph{IRQ} peut être dans le cas ou l'uintr et déclencher depuis le noyau ou en destination du thread non ordonnancer ou dans un appel système interruptible.
+Le mécanisme habituel des \emph{IRQ} peut être utilisé dans le cas où l'\uintr{} est déclenchée depuis le noyau et
+dans le cas où le thread destinataire n'est pas ordonnancé ou est dans un appel système interruptible.
 
 \subsubsection{Partage du descripteur de fichier}
 \label{sec:shareFD}
 
-Pour partager le descripteur de fichier il y a plusieurs façon possible.
+Pour partager le descripteur de fichier, il y a plusieurs façons possibles.
 
-Dans nos testes du mécanisme entre processus nous avons utilisé l'héritage des descripteurs de fichier.
-Dans nos testes du mécanisme entre threads nous avons utiliser un appel système qui permet d'enregistré tous les threads du processus comme émetteur sans utiliser le descripteur de fichier, % \verb|uintr_register_self()|
-mais il est possible d'utiliser une variable global pour y mettre le descripteur de fichier.
+Dans nos tests du mécanisme entre processus, nous avons utilisé l'héritage des descripteurs de fichier.
+Dans nos tests du mécanisme entre threads, nous avons utilisé un appel système qui permet d'enregistrer tous les threads du processus comme émetteurs, sans utiliser le descripteur de fichier, % \verb|uintr_register_self()|
+mais il est possible d'utiliser une variable globale pour y mettre le descripteur de fichier.
 
-Dans le cas ou les deux processus sont independent on peut utiliser l'appel système \code{pidfd_getfd} qui permet de dupliqué le descripteur de fichier d'un autre processus si il a le même propriétaire et si on connais sont \emph{PID} et le numéro du descripteur de fichier.
-Nous avons donc testé en partagent le numéro de descripteur de fichier avec un pipe.
-On aurai aussi pu passer par un fichier ou par sockets.
+Dans le cas où les deux processus sont indépendants, on peut utiliser l'appel système \code{pidfd_getfd} qui permet de dupliquer le descripteur de fichier d'un autre processus s'il a le même propriétaire et si l'on connaît son \emph{PID} et le numéro du descripteur de fichier.
+Nous avons donc testé en partageant le numéro de descripteur de fichier avec un pipe.
+On aurait aussi pu passer par un fichier ou par des sockets.
 
-Par la suite, dans \emph{NewMadeleine} mous avons utiliser le système d'URL à la connection qu'on verra dans la section /* TODO: ref */.
+Par la suite, dans \emph{NewMadeleine}, nous avons utilisé le système d'URL à la connexion que nous verrons dans la section /* TODO: ref */.
 
-\subsection{Testes du mécanisme}
+\subsection{Tests du mécanisme}
 
-Nous avons donc fait des testes du mécanisme avec des example minimaux de communications entre processus, nous allons voir les plus pertinent dans cette section.
+Nous avons donc effectué des tests du mécanisme avec des exemples minimaux de communication entre processus.
+Nous examinerons les plus pertinents dans cette section.
 
-Tout d'abord des tests pour mesurer le temps d'envoi d'interruption en espace utilisateur entre deux threads et deux processus.
+Tout d'abord, des tests pour mesurer le temps d'envoi d'interruption en espace utilisateur entre deux threads et deux processus.
 
-Pour le teste d'envoi entre deux threads il commance par créer un nouveau thread qui vas commancer par se "bind" à une unité de calcul, nous le verrons en détail dans la section \ref{sec:latencyMesure}.
-Il vas ensuite enregistrer un handler, démasquer les interruption, enregistrer tous les threads du processus comme émetteur avec l'appel système \code{uipi_index <- uintr_register_self(vector)} (uipi_index est global au processus) et attendre grâce à une boucle.
-Pendent ce temps là le thread principal attend une second, ce temps est arbitraire est laisse le temps au thread d'enregistrer un handler.
-Après sont attente il vas se "bind" à une unité de calcul puis envoyer une interruption.
-Pour cela nous commençons par enregistre le temps processeur actuelle puis on utilise l'instruction \code{senduipi} avec variable global \code{uipi_index}.
-Une fois que le handler ce déclenche on enregistre le temps actuelle du processeur pour ensuite calculer la différence.
-Ce teste est capable de faire plusieurs fois cette mesure.
-Il fini par imprimer les différence de temps dans la console et par désallouer et de-enregistré les uintr et les autre structure.
+Pour le test d'envoi entre deux threads, il commence par créer un nouveau thread qui va commencer par se "bind" à une unité de calcul.
+Nous le verrons en détail dans la section \ref{sec:latencyMesure}.
 
-Pour le teste d'envoi entre deux processus il commance par créer un pipe pour l'envoi du descripteur de fichier et une zone de mémoire partagé pour stocker les mesures de temps.
-Puis le processus ce fork en deux, le premier devient l'émetteur et le second de récepteur.
-Comme pour la version thread ils se "bind" à une unité de calcul.
-Le récepteur enregistre un handler et récupère un descripteur de fichier avec l'appel système \code{uvec_fd <- uintr_vector_fd(vector)} qu'il envois dans le pipe avant d'attendre grâce à une boucle.
-L'émetteur reçois le numéro du descripteur de fichier, il connais déjà le pid du processus grâce au fork, il peut donc utilisé \code{pidfd_getfd} pour dupliqué le descripteur de fichier.
-Avec ce descripteur il s'enregistre en temps qu'émetteur d'uintr.
-La mesure du temps et l'envoi d'interruption fonctionne comment pour la version thread.
-On peut aussi faire plusieurs fois la mesure et on imprime et effectue la terminaison proprement.
+Il va ensuite enregistrer un handler d'interruption, démasquer les interruptions, enregistrer tous les threads du processus comme émetteurs avec l'appel système \code{uipi_index <- uintr_register_self(vector)},\\
+(uipi_index est global au processus) et attendre grâce à une boucle.
 
-On verra le résultats de c'est mesure dans la section \ref{sec:performance}.
+Pendant ce temps-là, le thread principal attend une seconde.
+Ce temps est arbitraire et laisse le temps au thread d'enregistrer un handler d'interruption.
+Après son attente, il va se "bind" à une unité de calcul puis envoyer une interruption.
+Pour cela, nous commençons par enregistrer le temps processeur actuel, puis nous utilisons l'instruction \code{senduipi} avec la variable globale \code{uipi_index}.
+Une fois que le handler d'interruption se déclenche, on enregistre le temps actuel du processeur pour ensuite calculer la différence.
+Ce test est capable de faire cette mesure plusieurs fois.
+Il finit par imprimer les différences de temps dans la console et par désallouer et de-enregistrer les \uintr{} et les autres structures.
 
-Un teste ou le thread s'auto interromps tous simple en faisant un \code{uipi_index <- uintr_register_self(vector)} puis un \code{senduipi uipi_index} et on fait la mesure de la même façon que pour les autre testes.
+Pour le teste d'envoi entre deux processus, il commence par créer un pipe pour l'envoi du descripteur de fichier et une zone de mémoire partagée pour stocker les mesures de temps.
+Puis le processus se fork en deux, le premier devient l'émetteur et le second le récepteur.
+Comme pour la version avec threads, ils se "bind" à une unité de calcul.
+Le récepteur enregistre un handler d'interruption et récupère un descripteur de fichier avec l'appel système \code{uvec_fd <- uintr_vector_fd(vector)} qu'il envoie dans le pipe avant d'attendre grâce à une boucle.
+L'émetteur reçoit le numéro du descripteur de fichier, il connaît déjà le \emph{PID} du processus grâce au fork,
+il peut donc utiliser \code{pidfd_getfd} pour dupliquer le descripteur de fichier.
+Avec ce descripteur, il s'enregistre en tant qu'émetteur d'uintr.
+La mesure du temps et l'envoi d'interruption fonctionnent de la même manière que pour la version avec threads.
+On peut aussi effectuer la mesure plusieurs fois et on imprime et termine proprement.
 
-Pour les testes avec la pile alternative on à un test très simple qui est basé sur celui qui s'auto interromps et on modifie les tests d'envois entre deux processus ou threads pour mesurer les performances.
-Il est bien sur possible d'activé ou non l'utilisation de la pile alternative.
-Pour définir cette nouvelle pille on le faut juste après avoir enregistrer le handler et avant le démasquage.
+On verra les résultats de ces mesures dans la section \ref{sec:performance}.
 
-Un teste de démasquer les uintr dans un handler, c'est tous à fait possible et ça pose des problématique similaire que pour les signaux.
+Un test où le thread s'auto-interrompt tout simplement en faisant un \code{uipi_index <- uintr_register_self(vector)},\\
+puis un \code{senduipi uipi_index}, et on fait la mesure de la même façon que pour les autres tests.
 
-Un teste est l'envoi de plusieurs interruptions d'affilée.
-Il y à une différence de comportement par rapport au signaux, quand on reçois une interruption et que le handler est déclenché le comportement est le même c'est à dire que les interruptions von s'écraser et le handler ce déclenchera à nouveau une fois.
-La ou ce trouve là difference c'est si on fait plusieurs interruptions avant que le handler ce déclenche, les interruptions s'écrase à ce moment là aussi donc le handler ce d'éclanche qu'une seul fois quand on fait deux interruptions successive qu'avec les signaux le handler de signal ce déclencherai deux fois pour deux émission de signal successive car le handler est déjà déclenché des le premier signal.
+Pour les tests avec la pile alternative, nous avons un test très simple qui est basé sur celui qui s'auto-interrompt, et nous modifions les tests d'envoi entre deux processus ou threads pour mesurer l'impact les performances.
+Il est bien sûr possible d'activer ou non l'utilisation de la pile alternative.
+Pour définir cette nouvelle pile, on le fait juste après avoir enregistré le handler d'interruption et avant le démasquage.
 
-Grâce à un teste nous avons vue q'actuellement on peut enregistrer plusieurs fois le même descripteur de fichier ce qui mène à des doublons dans le tableau \emph{UITT} avec plusieurs \emph{UITTE} pour le même couple vecteur / \emph{UPID}.
-Cette limitation de l'implémentation noyau est documenté dans le patch et accompagné d'un commentaire \emph{TODO}.
+Un test de démasquage des \uintr{} dans un handler d'interruption.
+Il nous permet de voir que c'est tous à fait possible et cela pose des problématiques similaires à celles des signaux.
+
+Un test consiste à envoyer plusieurs interruptions d'affilée.
+Il nous permet de voir qu'il y a une différence de comportement par rapport aux signaux.
+Quand on reçoit une interruption et que le handler d'interruption est déclenché, le comportement est le même,
+c'est-à-dire que les interruptions vont s'écraser et le handler d'interruption se déclenchera à nouveau une fois.
+La différence réside dans le fait que si l'on effectue plusieurs interruptions avant que le handler d'interruption ne se déclenche,
+les interruptions s'écrasent également à ce moment-là.
+Ainsi, le handler d'interruption ne se déclenchera qu'une seule fois lorsque l'on effectue deux interruptions successives.
+Avec les signaux, en revanche, le handler de signal se déclencherait deux fois pour deux émissions de signal successives car le handler est déjà déclenché dès le premier signal.
+
+Grâce à un test, nous avons constaté qu'actuellement on peut enregistrer plusieurs fois le même descripteur de fichier,
+ce qui mène à des doublons dans le tableau \emph{UITT} avec plusieurs \emph{UITTE} pour le même couple vecteur / \emph{UPID}.
+Cette limitation de l'implémentation noyau est documentée dans le patch et accompagnée d'un commentaire \emph{TODO}.
 
 \subsection{Correction d'un bug dans le patch noyau}
 
@@ -340,8 +425,8 @@ Le calcul du pointeur de pile de la nouvelle pile ce fait donc juste avant de d�
 Pour les uintr le noyau se contente juste d'enregistrer l'adresse dans le registre dédier \code{IA32_UINTR_STACKADJUST} et le processeur utilise l'adresse tel quel comme pointeur de pile.
 On est donc confronté à un bug de débordement mémoire car on part du début de la zone mémoire.
 Il y a bien un test dans le patch du noyau qui vérifie ce cas mais mal.
-Nous somme tombé sur ce bug au moment d'utiliser le uintr dans \emph{NewMadeleine} qui manipulent bien plus la mémoire qu'un simple teste, on ce retrouvé avec des problèmes de corruption mémoire, des défauts de segmentation et des "double free detected".
-Nous avons donc corriger le teste du patch noyau ainsi que l'appel système.
+Nous somme tombé sur ce bug au moment d'utiliser le uintr dans \emph{NewMadeleine} qui manipulent bien plus la mémoire qu'un simple test, on ce retrouvé avec des problèmes de corruption mémoire, des défauts de segmentation et des "double free detected".
+Nous avons donc corriger le test du patch noyau ainsi que l'appel système.
 Pour ce fait on ajoute la taille de la zone mémoire à l'adresse avant de l'écrire dans le registre.
 Nous avons donc fait une \emph{Pull request} sur le dépôt GitHub du patch, à l'heurs ou nous écrivons ce document il n'a toujours pas étais appliqué par \intel{}.
 
