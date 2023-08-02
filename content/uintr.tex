@@ -1,7 +1,7 @@
 \section{Exploration des interruptions en espace utilisateur.}
 \label{sec:exploreUintr}
 
-Pour cette partie, j'ai utilisé mes connaissances personnelles autour du système, du développement noyau, de Linux, ainsi que ce que j'ai appris en cours de \emph{programmation système}, de \emph{système d'exploitation} et d'\emph{architecture des ordinateurs}.
+Pour cette partie, j'ai utilisé mes connaissances personnelles autour du système, du développement noyau, de Linux, ainsi que ce que j'ai appris en cours de \emph{programmation système}, de \emph{système d'exploitation}, d'\emph{architecture des ordinateurs} et \emph{Programmation des Architectures Parallèles}.
 
 \subsection{Prérequis et accès}
 \label{requirements}
@@ -412,64 +412,75 @@ Cette limitation de l'implémentation noyau est documentée dans le patch et acc
 
 \subsection{Correction d'un bug dans le patch noyau}
 
-En manipulent le mécanisme nous somme tombé sur un bug qui concerne l'utilisation d'une pile alternative.
-Comme pour les signaux il est possible de définir une pile alternative, cette nouvelle pile est utiliser au moment où le handler et déclencher.
-L'interface pour définir la pile alternative est la même pour les signaux et les uintr.
-Dans les manuels il est bien indiquer que l'utilisateur dois lui même allouer une zone mémoire consacré à la nouvelle pile, il a également la responsabilité de libérer la mémoire une fois le handler dé-enregistrer.
-Il est bien indiquer que l'utilisateur dois donné l'adresse de début (\emph{base address}) de la zone mémoire en plus la taille à l'appel système qui défini la pile alternative.
-Pour les uintr l'appel système est \code{uintr_alt_stack(spAddress, size)}.
-Il faut noté qu'une pile empile les éléments vers le haut c'est à dire que l'adresse du pointeur de pile décrois à l'ajout d'un éléments.
-Donc pour utiliser la zone mémoire dédier à la pile à partir de la fin.
-Du coté du noyau le mécanisme des signaux garde l'adresse et la taille en mémoire pour le moment ou le handler dois être déclencher.
-Le calcul du pointeur de pile de la nouvelle pile ce fait donc juste avant de déclencher le handler.
-Pour les uintr le noyau se contente juste d'enregistrer l'adresse dans le registre dédier \code{IA32_UINTR_STACKADJUST} et le processeur utilise l'adresse tel quel comme pointeur de pile.
+En manipulant le mécanisme, nous sommes tombés sur un bug qui concerne l'utilisation d'une pile alternative.
+Comme pour les signaux, il est possible de définir une pile alternative.
+Cette nouvelle pile est utilisée au moment où le handler est déclenché.
+L'interface pour définir la pile alternative est la même pour les signaux et les \uintr{}.
+Dans les manuels (des signaux et des \uintr{}), il est bien indiqué que l'utilisateur doit lui-même allouer une zone mémoire consacrée à la nouvelle pile,
+et il a également la responsabilité de libérer la mémoire une fois le handler dé-enregistré.
+Il est bien indiqué que l'utilisateur doit donner l'adresse de début (\emph{base address}) de la zone mémoire,
+ainsi que la taille, à l'appel système qui définit la pile alternative.
+Pour les \uintr{}, l'appel système est \code{uintr_alt_stack(spAddress, size)}.
+Il faut noter qu'une pile empile les éléments vers le haut, c'est-à-dire que l'adresse du pointeur de pile décroît à l'ajout d'un élément.
+Donc, pour utiliser la zone mémoire dédiée à la pile, il faut partir de la fin.
+Du côté du noyau, le mécanisme des signaux garde en mémoire l'adresse et la taille de la pile pour le moment où le handler doit être déclenché.
+Le calcul du pointeur de pile de la nouvelle pile se fait donc juste avant de déclencher le handler.
+Pour les \uintr{}, le noyau se contente juste d'enregistrer l'adresse dans le registre dédié \code{IA32_UINTR_STACKADJUST},
+et le processeur utilise l'adresse telle quelle comme pointeur de pile.
 On est donc confronté à un bug de débordement mémoire car on part du début de la zone mémoire.
-Il y a bien un test dans le patch du noyau qui vérifie ce cas mais mal.
-Nous somme tombé sur ce bug au moment d'utiliser le uintr dans \emph{NewMadeleine} qui manipulent bien plus la mémoire qu'un simple test, on ce retrouvé avec des problèmes de corruption mémoire, des défauts de segmentation et des "double free detected".
-Nous avons donc corriger le test du patch noyau ainsi que l'appel système.
-Pour ce fait on ajoute la taille de la zone mémoire à l'adresse avant de l'écrire dans le registre.
-Nous avons donc fait une \emph{Pull request} sur le dépôt GitHub du patch, à l'heurs ou nous écrivons ce document il n'a toujours pas étais appliqué par \intel{}.
+Il y a bien un test dans le patch du noyau qui vérifie ce cas, mais mal.
+Nous sommes tombés sur ce bug au moment d'utiliser les \uintr{} dans \emph{NewMadeleine},
+qui manipule bien plus la mémoire qu'un simple test.
+Nous nous sommes retrouvés avec des problèmes de corruption mémoire, des défauts de segmentation et des "double free detected".
+Nous avons donc corrigé le test du patch du noyau ainsi que l'appel système.
+Pour ce faire, on ajoute la taille de la zone mémoire à l'adresse avant de l'écrire dans le registre \code{IA32_UINTR_STACKADJUST}.
+Nous avons donc effectué une \emph{Pull request} \cite{pullRequestAltStackFix} sur le dépôt GitHub du patch,
+et à l'heure où nous écrivons ce document, il n'a toujours pas été appliqué par \intel{}.
 
 \subsection{Mesure de la latence}
 \label{sec:latencyMesure}
 
-Pour mesurer la latence entre le moment où on envois une interruption et où l'interruption est reçus par le handler on fait 2 mesure de temps.
-Pour faire les mesure de temps on utilise \code{clock_gettime} qui utilise l'introduction \code{rdtsc} et retourne le temps actuelle du processeur.
-On fait une premier mesure juste avant d'envoyer une interruptions et une seconde au tous début du handler.
-Pour obtenir la latence on a juste à soustraire la premier mesure à la seconde.
+Pour mesurer la latence entre le moment où on envoie une interruption et où l'interruption est reçue par le handler,
+on fait deux mesures de temps.
+Pour faire les mesures de temps, on utilise \code{clock_gettime} qui utilise l'instruction \code{rdtsc} et retourne le temps actuel du processeur.
+On fait une première mesure juste avant d'envoyer une interruption et une seconde au tout début du handler.
+Pour obtenir la latence, on a juste à soustraire la première mesure à la seconde.
 
-Nous avons regarder le code assembleur pour s'assurer de la mesures.
-Pour l'envoi, que l'on peut voire sur la figure \ref{fig:sendUintrAsm}, on peut voir que entre la mesure est l'instruction d'envois il y a seulement une Lecture mémoire qui n'est pas très coûteuse.
-Du coté de la réception, que l'on peut voire sur la figure \ref{fig:handlerUintrAsm}, on vois la sauvegarde des registres généraux au début du handler.
-Cette sauvegarde ajoute un petit surcoût mais il est obligatoire.
-Le compilateur \emph{GCC} nous force à mettre le flag \code{general-regs-only} pour compiler un handler d'interruption et donc sauvegardé les registre généraux.
-On peut voire la déclaration d'un handler avec la mesure du temps sur la figure \ref{fig:unitrHandler}.
+Nous avons regardé le code assembleur pour nous assurer de la mesure.
+Pour l'envoi, que l'on peut voir sur la figure \ref{fig:sendUintrAsm}, on peut constater qu'entre la mesure et l'instruction d'envoi,
+il y a seulement une lecture mémoire qui n'est pas très coûteuse.
+Du côté de la réception, que l'on peut voir sur la figure \ref{fig:handlerUintrAsm},
+on voit la sauvegarde des registres généraux au début du handler.
+Cette sauvegarde ajoute un petit surcoût, mais il est obligatoire.
+Le compilateur \emph{GCC} nous force à mettre le flag \code{general-regs-only} pour compiler un handler d'interruption et donc sauvegarder les registres généraux.
+On peut voir la déclaration d'un handler avec la mesure du temps sur la figure \ref{fig:unitrHandler}.
 \begin{figure}[H]
   \includegraphics[width=\textwidth]{senduipiTimeThreadO3}
-  \caption{Code assembleur de l'envois d'uintr}
+  \caption{Code assembleur de l'envoi d'\uintr{}}
   \label{fig:sendUintrAsm}
 \end{figure}
 
 \begin{figure}[H]
   \includegraphics[height=\textwidth]{handlerTimeThreadO3}
-  \caption{Code assembleur de l'handler uintr}
+  \caption{Code assembleur de l'handler \uintr{}}
   \label{fig:handlerUintrAsm}
 \end{figure}
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=\textwidth]{handlerDeclaration}
-  \caption{Déclaration du handler uintr}
+  \caption{Déclaration du handler \uintr{}}
   \label{fig:unitrHandler}
 \end{figure}
 
 Nous faisons la mesure de la même façon pour les signaux.
 
-Pour ne pas perturber la mesure il faut "bind" les threads à une unité de calcul.
+Pour ne pas perturber la mesure, il faut "bind" les threads à une unité de calcul.
 "bind" consiste à demander au noyau de toujours ordonnancer le thread sur la même unité de calcul.
-Pour ce faire nous utilisons la bibliothèque \emph{hwloc}. % TODO: cite here hwloc
-Il est donc important de "bind" les threads pendent les mesures car dans le cas contraire le noyau vas changer le thread d'unité de calcul ce qui vas amené à un surcoût non négligeable.
-En effet le changement d'unité et un peut coûteux et invalide certain cache.
+Pour ce faire nous utilisons la bibliothèque \emph{hwloc} \cite{hwloc}.
+Il est donc important de "bind" les threads pendant les mesures car dans le cas contraire,
+le noyau va changer le thread d'unité de calcul, ce qui va amener à un surcoût non négligeable.
+En effet, le changement d'unité est un peu coûteux et invalide certains caches.
 
 "bind" les threads nous permet aussi de contrôler le placement de ceci, c'est à dire si on met le thread émetteur et le thread récepteur sur deux unité de calcule proche ou distante.
 Comme nous le verrons dans la section \ref{sec:performance} le placement a un impact sur la latence des uintr.
