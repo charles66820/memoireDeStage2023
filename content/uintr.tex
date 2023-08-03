@@ -447,31 +447,85 @@ On fait une première mesure juste avant d'envoyer une interruption et une secon
 Pour obtenir la latence, on a juste à soustraire la première mesure à la seconde.
 
 Nous avons regardé le code assembleur pour nous assurer de la mesure.
-Pour l'envoi, que l'on peut voir sur la figure \ref{fig:sendUintrAsm}, on peut constater qu'entre la mesure et l'instruction d'envoi,
+Pour l'envoi, que l'on peut voir en listing \ref{lst:sendUintrAsm}, on peut constater qu'entre la mesure et l'instruction d'envoi,
 il y a seulement une lecture mémoire qui n'est pas très coûteuse.
-Du côté de la réception, que l'on peut voir sur la figure \ref{fig:handlerUintrAsm},
+Du côté de la réception, que l'on peut voir en listing \ref{lst:handlerUintrAsm},
 on voit la sauvegarde des registres généraux au début du handler.
 Cette sauvegarde ajoute un petit surcoût, mais il est obligatoire.
 Le compilateur \emph{GCC} nous force à mettre le flag \code{general-regs-only} pour compiler un handler d'interruption et donc sauvegarder les registres généraux.
-On peut voir la déclaration d'un handler avec la mesure du temps sur la figure \ref{fig:unitrHandler}.
-\begin{figure}[H]
-  \includegraphics[width=\textwidth]{senduipiTimeThreadO3}
-  \caption{Code assembleur de l'envoi d'\uintr{}}
-  \label{fig:sendUintrAsm}
-\end{figure}
+On peut voir la déclaration d'un handler avec la mesure du temps en listing \ref{lst:unitrHandler}.
 
-\begin{figure}[H]
-  \includegraphics[height=\textwidth]{handlerTimeThreadO3}
-  \caption{Code assembleur de l'handler \uintr{}}
-  \label{fig:handlerUintrAsm}
-\end{figure}
+\begin{lstlisting}[language={[x86masm]Assembler}, caption=Code assembleur de l'envoi d'\uintr{}, label={lst:sendUintrAsm}]
+	call	clock_gettime@PLT
+	movq	uipi_index(%rip), %rax
+	senduipi	%rax
+\end{lstlisting}
 
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=\textwidth]{handlerDeclaration}
-  \caption{Déclaration du handler \uintr{}}
-  \label{fig:unitrHandler}
-\end{figure}
+% \begin{figure}[H]
+%   \includegraphics[width=\textwidth]{senduipiTimeThreadO3}
+%   \caption{Code assembleur de l'envoi d'\uintr{}}
+%   \label{fig:sendUintrAsm}
+% \end{figure}
+
+\begin{lstlisting}[language={[x86masm]Assembler}, caption=Code assembleur de l'handler \uintr{}, label={lst:handlerUintrAsm}]
+  handler:
+  .LFB203:
+    .cfi_startproc
+    .cfi_def_cfa_offset 16
+    pushq	%r11
+    .cfi_def_cfa_offset 24
+    .cfi_offset 11, -24
+    pushq	%r10
+    .cfi_def_cfa_offset 32
+    .cfi_offset 10, -32
+    pushq	%r9
+    .cfi_def_cfa_offset 40
+    .cfi_offset 9, -40
+    pushq	%r8
+    .cfi_def_cfa_offset 48
+    .cfi_offset 8, -48
+    pushq	%rdi
+    .cfi_def_cfa_offset 56
+    .cfi_offset 5, -56
+    movl	$1, %edi
+    pushq	%rsi
+    .cfi_def_cfa_offset 64
+    .cfi_offset 4, -64
+    leaq	ts2(%rip), %rsi
+    pushq	%rcx
+    .cfi_def_cfa_offset 72
+    .cfi_offset 2, -72
+    pushq	%rdx
+    .cfi_def_cfa_offset 80
+    .cfi_offset 1, -80
+    pushq	%rax
+    .cfi_def_cfa_offset 88
+    .cfi_offset 0, -88
+    subq	$8, %rsp
+    .cfi_def_cfa_offset 96
+    cld
+    call	clock_gettime@PLT
+\end{lstlisting}
+
+% \begin{figure}[H]
+%   \includegraphics[height=\textwidth]{handlerTimeThreadO3}
+%   \caption{Code assembleur de l'handler \uintr{}}
+%   \label{fig:handlerUintrAsm}
+% \end{figure}
+
+\begin{lstlisting}[language=c, caption=Déclaration du handler \uintr{}, label={lst:unitrHandler}]
+  __attribute__((target("general-regs-only")))
+  __attribute__((interrupt))
+  void handler(struct __uintr_frame* ui_frame, u64 vector) {
+    clock_gettime(CLOCK_MONOTONIC, &ts2);
+\end{lstlisting}
+
+% \begin{figure}[H]
+%   \centering
+%   \includegraphics[width=\textwidth]{handlerDeclaration}
+%   \caption{Déclaration du handler \uintr{}}
+%   \label{fig:unitrHandler}
+% \end{figure}
 
 Nous faisons la mesure de la même façon pour les signaux.
 
@@ -481,55 +535,59 @@ Pour ce faire nous utilisons la bibliothèque \emph{hwloc} \cite{hwloc}.
 Il est donc important de "bind" les threads pendant les mesures car dans le cas contraire,
 le noyau va changer le thread d'unité de calcul, ce qui va amener à un surcoût non négligeable.
 En effet, le changement d'unité est un peu coûteux et invalide certains caches.
+"bind" les threads nous permet aussi de contrôler le placement de ceux-ci, c'est-à-dire si on met le thread émetteur et le thread récepteur sur deux unités de calcul proches ou distantes.
+Comme nous le verrons dans la section \ref{sec:performance}, le placement a un impact sur la latence des \uintr{}.
 
-"bind" les threads nous permet aussi de contrôler le placement de ceci, c'est à dire si on met le thread émetteur et le thread récepteur sur deux unité de calcule proche ou distante.
-Comme nous le verrons dans la section \ref{sec:performance} le placement a un impact sur la latence des uintr.
-
-Il est aussi important de fixer la fréquence de tous les core du CPU pour avoir des mesure courante.
+Il est aussi important de fixer la fréquence de tous les core du CPU pour avoir des mesures cohérentes.
 
 \subsection{Performances}
 \label{sec:performance}
 
-Dans cette section nous allons voir des mesure de la latence des uintr dans différant contexts.
-La fréquence des unités de calcul est fixer à 2GHz lors des mesure.
-Les mesure faite avec le turbo boost activé monte à 3.8GHz.
-Les mesures de latence sont en nanoseconde.
-Il est intéressant de noter que sur une unité de calcul cadencer à une fréquence de 2GHz elle execute environ deux instructions par nanoseconde. % plus 2 cycle
-Certaine mesure, que se sois avec les uintr ou les signaux, sont très élevé mais sont très peut nombreuse, elle sont certainement lié au système.
-Dans les graphiques que nous allons voir nous avons donc coupé les valeurs qui dépasse les 8000 nanoseconde.
-Nous avons défini trois placements à partir le la topologie de la machine fourni par \atos{} (vous pouvez trouver la topologie sur cette figure\ref{fig:lstopo}).
-Les trois placements sont les suivant :
+Dans cette section, nous allons voir des mesures de la latence des \uintr{} dans différents contextes.
+La fréquence des unités de calcul est fixée à 2 GHz lors des mesures.
+Les mesures faites avec le turbo boost activé montent à 3.8 GHz.
+Les mesures de latence sont en nanosecondes.
+Il est intéressant de noter que sur une unité de calcul cadencée à une fréquence de 2 GHz, elle exécute environ deux instructions par nanoseconde. % plus 2 cycle
+Certaines mesures, que ce soit avec les \uintr{} ou les signaux, sont très élevées mais sont très peu nombreuses.
+Elles sont certainement liées au système.
+Dans les graphiques que nous allons voir, nous avons donc coupé les valeurs qui dépassent les 8000 nanosecondes. % on considère juste les valeurs entre 0 et 8000 ns
+Nous avons défini trois placements à partir de la topologie de la machine fournie par \atos{}.
+Vous pouvez trouver la topologie de la machine sur la figure \ref{fig:lstopo}.
+
+Les trois placements sont les suivants :
 \begin{itemize}
-  \item le placements "proche" qui consiste à placer les threads sur deux unité de calcule proche mais pas dans le même core.
-  \item le placements "éloigné" qui consiste à placer les threads sur deux unité de calcule qui sont dans le même CPU et qui sont éloigné.
-  \item le placements "très éloigné" qui consiste à placer les threads sur deux unité de calcule qui ce trouve sur deux CPU différant.
+  \item Le placement "proche" consiste à placer les threads sur deux unités de calcul proches mais pas dans le même core.
+  \item Le placement "éloigné" consiste à placer les threads sur deux unités de calcul qui sont dans le même CPU et qui sont éloignées.
+  \item Le placement "très éloigné" consiste à placer les threads sur deux unités de calcul qui se trouvent sur deux CPU différents.
 \end{itemize}
 
-Les mesures que nous allons présenter on étais faite sans que la pile alternative ne sois activé.
-Nous avons bien fait des mesures avec la pile alternative des uintr activé est nous n'avons vue aucune différence car l'utilisation de cette pile
-amené seulement à une copie de la mémoire d'un registre à un autre si le registre contiens une adresse ce qui est très peut coûteux.
+Les mesures que nous allons présenter ont été faites sans que la pile alternative ne soit activée.
+Nous avons bien fait des mesures avec la pile alternative des \uintr{} activée et nous n'avons vu aucune différence,
+car l'utilisation de cette pile amène seulement à une copie de la mémoire d'un registre à un autre si le registre contient une adresse, ce qui est très peu coûteux.
 
-Dans nos graphiques nous appelons une mesure une interaction.
-Nous faisons donc un millions d'iterations et nous n'affichons pas la premier car cette itération est énormément perturber notamment par le coût de chargement des caches.
+Dans nos graphiques, nous appelons une mesure une itération.
+Nous faisons donc un million d'itérations et nous n'affichons pas la première, car cette itération est énormément perturbée notamment par le coût de chargement des caches.
 
-Dans les graphiques nous avons représenté la mesure de la latence par des points bleu pour les signaux et par des points rouge pour les uintr.
-Nous ne cherchons pas à expliquer les mesure des signaux, elle sont juste là pour comparer les uintr avec un mécanisme qui passe par le noyau.
+Dans les graphiques, nous avons représenté la mesure de la latence par des points bleus pour les signaux et par des points rouges pour les \uintr{}.
+Nous ne cherchons pas à expliquer les mesures des signaux, elles sont juste là pour comparer les \uintr{} avec un mécanisme qui passe par le noyau.
 
-Sur la graphiques \ref{subfig:latency1e6ThreadsNT}, les itérations sont représenté sur l'axe des abscisses et la latence sur l'axe des ordonnés.
-Bien sur plus la latence est basse mieux c'est.
-Nous observons que le mécanisme a une latence de environ 642 nanoseconde ce qui est environ 4.75 fois plus rapide que les signaux.
-On vois qu'il y a deux groupe de mesure :
+Sur le graphique \ref{subfig:latency1e6ThreadsNT}, les itérations sont représentées sur l'axe des abscisses et la latence sur l'axe des ordonnées.
+Bien sûr, plus la latence est basse, mieux c'est.
+Nous observons que le mécanisme a une latence d'environ 642 nanosecondes, ce qui est environ 4.75 fois plus rapide que les signaux.
+
+On voit qu'il y a deux groupes de mesures :
 \begin{itemize}
-  \item un au alentours des 642 nanoseconde qui comporte la majorité des mesures.
-  On le vois bien dans le tableau \ref{tab:latency1e6ThreadsNT} qui ce trouve juste en dessous du graphiques.
-  En effet entre la mesure minimum et la mesure à 95\% il y a une différence de 19 nanoseconde.
-  On peut voir cette distribution aussi dans l'histogramme sur cette figure \ref{fig:distribution}.
-  Cette histogramme porte sur des plage de 300 nanoseconde.
-  On vois bien pour les uintr, en orange, que la majorité ce trouve sur la bande entre 300 et 600 nanoseconde.
-  \item un autre vers 2700 nanoseconde qui correspond certainement au moment ou l'interruptions n'as pas pu être reçus car le thread été dans le noyau.
+  \item Un autour des 642 nanosecondes qui comporte la majorité des mesures.
+  On le voit bien dans le tableau \ref{tab:latency1e6ThreadsNT} qui se trouve juste en dessous du graphique.
+  En effet, entre la mesure minimum et la mesure à 95\%, il y a une différence de 19 nanosecondes.
+  On peut voir cette distribution aussi dans l'histogramme sur la figure \ref{fig:distribution}.
+  Cet histogramme porte sur des plages de 300 nanosecondes.
+  On voit bien pour les \uintr{}, en orange, que la majorité se trouve sur la bande entre 300 et 600 nanosecondes.
+  \item Un autre autour de 2700 nanosecondes qui correspond certainement au moment où l'interruption n'a pas pu être reçue car le thread était dans le noyau.
 \end{itemize}
 
-Pour un mécanisme qui fonctionne au niveau des instructions on pourrais s'attendre à une latence moins grande mais le mécanisme est bien plus rapide que le fait de passé par le système.
+Pour un mécanisme qui fonctionne au niveau des instructions, on pourrait s'attendre à une latence moins grande,
+mais le mécanisme est bien plus rapide que le fait de passer par le système.
 % il serai intéressant de comparer avec la latence d'une IRQ 236 et non uintr
 % TODO: ce qu'on en pense, c'est bon ?
 
@@ -559,19 +617,21 @@ Pour un mécanisme qui fonctionne au niveau des instructions on pourrais s'atten
 
 \begin{figure}[H]
   \includegraphics[width=\textwidth]{latency/distribution}
-  \caption{Histogramme de distribution des mesures de la latence entre deux threads proche}
+  \caption{Histogramme de distribution des mesures de la latence entre deux threads avec un placement proche}
   \label{fig:distribution}
 \end{figure}
 
-Nous avons fait les même mesure entre deux processus est les valeur sont très similaire peut importe le placement car le mécanisme fonctionne au niveau des threads.
-On peut retrouvé le ces mesure en annexe sur la figure \ref{fig:latency1e6ProcessNT}.
+Nous avons fait les mêmes mesures entre deux processus et les valeurs sont très similaires, peu importe le placement,
+car le mécanisme fonctionne au niveau des threads.
+On peut retrouver ces mesures en annexe sur la figure \ref{fig:latency1e6ProcessNT}.
 
-En comparant les mesures de latences entre le placement proche et éloigné on vois une petite différence de 10 nanoseconde de plus, on peut voir ça sur la figure \ref{fig:latency1e6ThreadsF}.
+En comparant les mesures de latences entre le placement proche et éloigné on voit une petite différence de 10 nanosecondes de plus,
+on peut voir ça sur la figure \ref{fig:latency1e6ThreadsF}.
 
-Quand on compare entre le placement proche et très éloigné on vois une grand différence qui est du notamment au fait de passer d'un noeud mémoire NUMA à un autre.
-On à donc une différence d'environ 172 nanoseconde de plus.
-Le graphiques nous montre également une plus grande dispersion de la latence avec la majorité qui est toujours en dessous de 1000 nanoseconde.
-On retrouve ces mesures sur la figure \ref{fig:latency1e6ThreadsVF} juste en dessous.
+Quand on compare entre le placement proche et très éloigné on voit une grande différence qui est due notamment au fait de passer d'un noeud mémoire NUMA à un autre.
+On a donc une différence d'environ 172 nanosecondes de plus.
+Le graphique nous montre également une plus grande dispersion de la latence avec la majorité qui est toujours en-dessous de 1000 nanosecondes.
+On retrouve ces mesures sur la figure \ref{fig:latency1e6ThreadsVF} juste en-dessous.
 \begin{figure}[H]
   \begin{subfigure}{\textwidth}
     \includegraphics[width=\textwidth]{latency/1e6ThreadsVF}
@@ -595,11 +655,11 @@ On retrouve ces mesures sur la figure \ref{fig:latency1e6ThreadsVF} juste en des
   \caption{Mesures de latence entre deux threads avec un placement très éloigné}
   \label{fig:latency1e6ThreadsVF}
 \end{figure}
-
+% TODO:here
 
 Quand on augmente la fréquence des unités de calcul la latence diminue.
-Pour ce faire on active le turbo boost du CPU.
-On le vois sur les mesure de la figure \ref{fig:latency1e6ThreadsNT-TB} pour le placement proche mais c'est également le cas pour l'éloigné et le très éloigné en figure \ref{fig:latency1e6ThreadsF-TB} et figure \ref{fig:latency1e6ThreadsVF-TB}.
+Pour se faire on active le turbo boost du CPU.
+On le voit sur les mesures de la figure \ref{fig:latency1e6ThreadsNT-TB} pour le placement proche mais c'est également le cas pour le placement éloigné et le très éloigné en figure \ref{fig:latency1e6ThreadsF-TB} et figure \ref{fig:latency1e6ThreadsVF-TB}.
 
 \begin{figure}[H]
   \begin{subfigure}{\textwidth}
@@ -625,4 +685,4 @@ On le vois sur les mesure de la figure \ref{fig:latency1e6ThreadsNT-TB} pour le 
   \label{fig:latency1e6ThreadsNT-TB}
 \end{figure}
 
-Nous n'avons fait aucune mesures de latence pour les threads bloqué et interruptible.
+Nous n'avons fait aucune mesure de latence pour les threads bloqués et interruptibles.
