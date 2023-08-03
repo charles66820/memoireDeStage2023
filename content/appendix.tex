@@ -31,7 +31,7 @@
   sudo grubby --set-default /boot/vmlinuz-6.0.0+
 \end{lstlisting}
 
-\begin{lstlisting}[language=bash, caption=Lancer les tests uintr du noyau (le noyau doit être installé)]
+\begin{lstlisting}[language=bash, caption=Lancer les tests \uintr{} du noyau (le noyau doit être installé)]
   make -C tools/testing/selftests TARGETS=uintr run_tests
 \end{lstlisting}
 
@@ -41,7 +41,7 @@
 
 \begin{figure}[H]
   \includegraphics[width=\textwidth]{enableFeaturesInConfigMenu}
-  \caption{Activé le support des uintr à la compilation du noyau}
+  \caption{Activer le support des \uintr{} à la compilation du noyau}
   \label{fig:enableFeaturesInConfigMenu}
 \end{figure}
 
@@ -107,7 +107,7 @@
 
 \begin{figure}[H]
   \includegraphics[width=\textwidth]{lstopoC4eUintr}
-  \caption{Topologie de la machine fourni par \atos{} obtenus grâce à la command \emph{lstopo}}
+  \caption{Topologie de la machine fournie par \atos{} obtenue grâce à la commande \emph{lstopo}}
   \label{fig:lstopo}
 \end{figure}
 
@@ -131,7 +131,7 @@
     \caption{}
     \label{tab:latency1e6ProcessNT}
   \end{subtable}
-  \caption{Mesures de latence entre deux process avec un placement proche}
+  \caption{Mesures de latence entre deux processus avec un placement proche}
   \label{fig:latency1e6ProcessNT}
 \end{figure}
 

@@ -14,7 +14,7 @@ Les difficultés étaient liées à la disponibilité d'une machine, à trouver 
 Nous avons donc obtenu un accès VPN qui utiliser l'ancien système VPN, car le nouveau ne fonctionnait pas.
 Nous avons eu accès à la machine environ deux mois et demi après le début du stage.
 La machine était déjà configurée avec le système d'exploitation Red Hat Enterprise Linux (RHEL) version 9.1 avec un noyau Linux version \emph{5.14.0-162.6.1}.
-Elle possède également au moins une carte BIX v2 que nous n'avons pas utilisées pendant le stage. % v2 == BXI 1.3
+Elle possède également au moins une carte \emph{BXI} v2 que nous n'avons pas utilisées pendant le stage. % v2 == BXI 1.3
 
 Il faut également avoir une version patchée du noyau Linux prenant en charge le nouveau mécanisme.
 Cette version patchée n'est pas encore disponible dans la branche principale du noyau.
@@ -51,7 +51,7 @@ le vecteur 128 est réservé pour les appels système,
 et les vecteurs entre 129 et 255 sont destinés à des utilisations diverses.
 
 Il est important de savoir que chaque unité de calcul (processeur logique) possède un \emph{APIC ID} physique.
-Petit fun-fact : le \emph{core ID} est un sous-ensemble de l'\emph{APIC ID}.
+À titre informatif, le \emph{core ID} est un sous-ensemble de l'\emph{APIC ID}.
 
 Pour déclencher une interruption, il y a quatre possibilités :
 
@@ -299,7 +299,7 @@ Nous allons maintenant voir un exemple d'initialisation des \uintr{} illustré s
 
 \begin{figure}[H]
   \includegraphics[width=\textwidth]{uintrInit}
-  \caption{Phase d'initialisation des uintr}
+  \caption{Phase d'initialisation des \uintr{}}
   \label{fig:initUintr}
 \end{figure}
 
@@ -381,7 +381,7 @@ Comme pour la version avec threads, ils se "bind" à une unité de calcul.
 Le récepteur enregistre un handler d'interruption et récupère un descripteur de fichier avec l'appel système \code{uvec_fd <- uintr_vector_fd(vector)} qu'il envoie dans le pipe avant d'attendre grâce à une boucle.
 L'émetteur reçoit le numéro du descripteur de fichier, il connaît déjà le \emph{PID} du processus grâce au fork,
 il peut donc utiliser \code{pidfd_getfd} pour dupliquer le descripteur de fichier.
-Avec ce descripteur, il s'enregistre en tant qu'émetteur d'uintr.
+Avec ce descripteur, il s'enregistre en tant qu'émetteur d'\uintr{}.
 La mesure du temps et l'envoi d'interruption fonctionnent de la même manière que pour la version avec threads.
 On peut aussi effectuer la mesure plusieurs fois et on imprime et termine proprement.
 
@@ -538,7 +538,7 @@ En effet, le changement d'unité est un peu coûteux et invalide certains caches
 "bind" les threads nous permet aussi de contrôler le placement de ceux-ci, c'est-à-dire si on met le thread émetteur et le thread récepteur sur deux unités de calcul proches ou distantes.
 Comme nous le verrons dans la section \ref{sec:performance}, le placement a un impact sur la latence des \uintr{}.
 
-Il est aussi important de fixer la fréquence de tous les core du CPU pour avoir des mesures cohérentes.
+Il est aussi important de fixer la fréquence de tous les core du CPU pour avoir des mesures reproductibles.
 
 \subsection{Performances}
 \label{sec:performance}
@@ -550,7 +550,7 @@ Les mesures de latence sont en nanosecondes.
 Il est intéressant de noter que sur une unité de calcul cadencée à une fréquence de 2 GHz, elle exécute environ deux instructions par nanoseconde. % plus 2 cycle
 Certaines mesures, que ce soit avec les \uintr{} ou les signaux, sont très élevées mais sont très peu nombreuses.
 Elles sont certainement liées au système.
-Dans les graphiques que nous allons voir, nous avons donc coupé les valeurs qui dépassent les 8000 nanosecondes. % on considère juste les valeurs entre 0 et 8000 ns
+Dans les graphiques, nous avons donc coupé les valeurs qui dépassent les 8000 nanosecondes. % on considère juste les valeurs entre 0 et 8000 ns
 Nous avons défini trois placements à partir de la topologie de la machine fournie par \atos{}.
 Vous pouvez trouver la topologie de la machine sur la figure \ref{fig:lstopo}.
 

@@ -17,9 +17,9 @@ La plupart des CPU ont été disponibles à la vente le 14 mars.
 
 Dans la plupart des autres domaines, les périphériques envoient une interruption ordinaire à l'application, par le biais des signaux ou d'un appel système bloquant, pour avertir d'un changement.
 L'idée serait de faire la même chose en HPC grâce aux interruptions en espace utilisateur.
-Le projet global vise donc à faire progresser les communications entre plusieurs nœuds du réseau BXI sans faire de polling et en utilisant les interruptions en espace utilisateur.
+Le projet global vise donc à faire progresser les communications entre plusieurs nœuds du réseau \emph{BXI} sans faire de polling et en utilisant les interruptions en espace utilisateur.
 Cela permettrait de réduire globalement le temps de calcul d'une application.
-Pour ce faire, la carte réseau BXI devra être capable de lever des interruptions en espace utilisateur.
+Pour ce faire, la carte réseau \emph{BXI} devra être capable de lever des interruptions en espace utilisateur.
 Le fait de supprimer le polling et de réduire le temps de calcul permettra de diminuer la consommation électrique.
 
 % remonter les évènements réseau jusque la bibliothèque NewMadeleine avec un coût aussi faible que possible.
@@ -47,9 +47,22 @@ Le premier objectif est de défricher le fonctionnement des interruptions en esp
 \end{itemize}
 
 Le second objectif est de connaître les propriétés du mécanisme et de mesurer sa performance.
-Le troisième objectif est de ne plus avoir à faire du polling, que ce soit en dédiant un thread ou en utilisant les threads de façon opportuniste, afin de ne plus perdre de temps de calcul à poll et de résoudre les problèmes de réactivité.
-Pour cela, on envisage l'intégration de ces interruptions dans le driver de mémoire partagée (shm) de NewMadeleine.
-Lors de ce stage nous testerons le fonctionnement avec des communications entre processus (IPC, Inter Process Communication en anglais).
+Le troisième objectif est de ne plus avoir à faire du polling,
+que ce soit en dédiant un thread ou en utilisant les threads de façon opportuniste,
+afin de ne plus perdre de temps de calcul à poll et de résoudre les problèmes de réactivité.
+
+Le troisième objectif est de montrer que l'utilisation des \uintr{} dans les communications HPC est possible.
+Pour cela, on se place dans un cadre simplifié :
+
+\begin{itemize}
+  \item On se concentre sur les communications entre processus (IPC, Inter-Process Communication en anglais).
+  Pour cela, on va utiliser la mémoire partagée (shm) pour communiquer au lieu du réseau \emph{BXI}.
+  \item On se limite aux cas généraux des communications (donc pas de gros messages, pas de communications multi-thread, etc).
+\end{itemize}
+
+On envisage donc l'intégration de ces interruptions dans le driver de mémoire partagée (shm) de NewMadeleine,
+ce qui nous permet une utilisation réelle pour voir ce que donnerait une version complète.
+
 Pour intégrer les interruptions dans les drivers de \emph{NewMadeleine}, il faut également permettre la progression des communications à partir d'un handler d'interruption.
 Le dernier objectif est de montrer que l'utilisation d'interruption permet bien d'améliorer le recouvrement des communications par du calcul.
 

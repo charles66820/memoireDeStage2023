@@ -18,17 +18,6 @@ Ces simulations simulent la dynamique des fluides, la résistance structurelle, 
 
 \bigskip
 
-De nos jour les supercalculateurs sont composé de plusieurs ordinateur que l'on appelle noeud de calculs.
-Ceci sont regroupé en grappe (cluster), il sont tous vue est utiliser comme une seul grande machine.
-Ce fonctionnement pose des questions sur la répartition du calcule, la distribution de la mémoire, la communication entre les différant noeuds...
-Dans le contexte du stage, nous nous sommes concentrés sur les communications entre noeuds.
-Les noeuds sont connecté entre eux par un réseau haute performance.
-Ce réseau est dédiés au communications est n'est pas forcément de type Ethernet.
-La gestion des noeuds est généralement effectuée par un second réseau plus traditionnel (Ethernet; TCP/IP).
-Les réseaux haute performance ont une latence autour de quelque microseconde.
-/* TODO: insisté sur la différence entre les réseaux pour le HPC et les réseaux classiques */
-Chaque noeuds possède une ou plusieurs carte réseau et il faut les programmé.
-
 De nos jours, les supercalculateurs sont composés de plusieurs ordinateurs que l'on appelle noeuds de calcul.
 Ceux-ci sont regroupés en grappes (clusters) et sont tous vus et utilisés comme une seule grande machine.
 Ce fonctionnement soulève des questions concernant la répartition du calcul, la distribution de la mémoire et la communication entre les différents noeuds.
@@ -56,8 +45,10 @@ Cependant, lorsque l'on passe par le noyau, il y a un surcoût qui n'est pas né
 En effet, pour passer par le noyau, on utilise généralement des appels système qui prennent la forme d'une fonction.
 Un appel système effectue un changement de contexte (context switch) pour passer de l'espace utilisateur à l'espace noyau.
 Ce changement de contexte est coûteux car il sauvegarde les états du code de l'utilisateur avant d'exécuter celui du noyau.
+save états du process (registres, registre vectoriel, le pc, esp, flags...),
+% TODO: parler de la MMU
 Une fois le changement de contexte effectué, le code noyau de l'appel système s'exécute avant de refaire un changement de contexte pour, cette fois, passer de l'espace noyau à l'espace utilisateur et ainsi restaurer l'état du code de l'utilisateur.
-% Le kernel peut aussi exécuté aussi du code qu'il à mis à plus tard
+Le noyau peut aussi être amené à mettre à jour ses structures internes, exécuter des tâches qu'il avait mises à faire plus tard, etc.
 Donc, le fait de passer par un appel système coûte plusieurs microsecondes.
 On voit donc qu'il n'est pas préférable d'utiliser les appels système, car leur durée est du même ordre de grandeur qu'une communication entre noeuds.
 En HPC, on programme donc directement la carte réseau à partir de l'espace utilisateur (OS bypass en anglais).
@@ -109,6 +100,10 @@ Ainsi, si un thread scrute trop souvent une zone mémoire ou que plusieurs threa
 on aboutit à des problématiques de contention de la mémoire, car la ligne de cache est invalidée plus souvent, ce qui entraîne un surcoût.
 Avec le polling nous somme donc contrains à respecter une granularité lié à la taille d'une ligne de cache.
 Utiliser les interruptions permettrait de ne plus avoir ce problème, car seul le thread concerné par une zone mémoire serait prévenu donc plus de contention à ce niveau.
+
+En plus, utiliser des interruptions permettrait de ne plus faire des scrutations pour rien,
+mais seulement scruter lorsqu'il y a un événement à traiter.
+Le nombre de scrutations serait donc grandement réduit.
 
 \subsection{BXI}
 
@@ -163,10 +158,12 @@ Pour faire progresser les communications en tâche de fond, il est possible de :
   \item Faire régulièrement des appels à \code{MPI_test} et effectuer des calculs entre chaque appel.
   Cela permet de recouvrir la latence des communications par du calcul.
   La progression peut également se faire dans d'autres appels aux fonctions MPI.
-  Lorsqu'il n'y a plus de calcul à effectuer, on repasse à une progression bloquante par un appel à \code{MPI_Wait}, sauf si la communication est déjà terminée.
+  Lorsqu'il n'y a plus de calcul à effectuer, on repasse à une progression bloquante par un appel à \code{MPI_Wait},
+  sauf si la communication est déjà terminée.
   \item Utiliser un thread dédié aux progressions.
-  Dans ce cas, c'est la bibliothèque MPI qui s'occupe de la progression des communications en tâche de fond grâce à un thread dédié.
-  Il faut donc faire attention au placement des threads et prendre en compte qu'un thread est déjà utilisé par la bibliothèque de communication.
+  Dans ce cas, c'est la bibliothèque MPI ou l'application qui s'occupe de la progression des communications
+  en tâche de fond grâce à un thread dédié.
+  Il faut donc faire attention au placement des threads et prendre en compte qu'un thread est déjà utilisé pour les communications.
   Il faut aussi éviter d'appeler trop souvent \code{MPI_Test} car cela peut créer de la contention.
   \item Utilisation des threads de façon opportuniste, c'est-à-dire qu'un des threads, une fois son calcul terminé, fera progresser les communications.
   C'est ce qui est fait par \emph{Pioman} dans \emph{NewMadeleine}.
@@ -198,7 +195,11 @@ Il est possible de masquer la réception de certains signaux en utilisant des ap
 
 \subsection{Travaux antérieur}
 
-TODO: Amélioré ?
+TODO: Amélioré ? le faire pour tous ce qui existe
+
+% Feedback d'Alexandre
+% Pour la progression des communications, il y a des choses chez MVAPICH (avec du rdma), chez MPICH (avec un thread dédié, mais non-bindé), dans MxM pour InfiniBand (thread dédié)
+% Pour éviter le polling et exploiter les interruptions, ça se faisait jusque là avec un appel système bloquant. Ça existe en particulier dans l'API verbs d'InfiniBand.
 
 % Cité ce qui à été fait pour la progression dan NewMadeleine...
 Les origines de \emph{NewMadeleine} sont décrites dans cet article \cite{aumage:inria-00127356}.
