@@ -11,78 +11,9 @@
     - montré la difficulté du travail (dire que j'ai eu du mal ?)
     - montré que j'utilise mes connaissances et ce que j'ai vue en cours en M1 + premier semestre de M2
 * Faire des citation
-* une 30aine de pages
 * parlé de la machine qui crash quand il y a trop de charge
 
-* Petite description de INRIA
-* Petite description d'Atos (Eviden)
-* Environnement de travail immédiat (bureau dans l'open space TADaaM)
-  + réunion de suivie du stage toute les semaine
-* Le cadre :
-  + Objectifs du service :
-    - TADaaM : faire de la recherche... comm
-    - BXI-LL : développé les NIC BXI... comm
-  + type de personnel :
-    - TADaaM : chercher, post-doc, doctorant et stagiaire
-    - BXI-LL : ingénigeur ?
-  + Culture informatique : très forte pour les 2 ?
-  + Matériel et logiciels :
-    - TADaaM : ordinateur portable linux, écran secondaire, service inria (email, mattermost, webex...)
-    - BXI-LL : une machine avec 2 CPU SPR accessible via VPN.
-  + contraintes : démarche scientifique ? ...
-
-
 ## Le plan
-
-* introducion
-  + presentation e/
-  + presentation du plan
-
-* context
-  + Le HPC pour la simulation numérique...
-  + interruption possible mais pas pour du os bypass
-  + OS bypass
-  + polling
-  + présenté le résaux BXI
-  + MPI
-  + communication asynchrone (thread dédier, progression faite dans le calcule, progression opportuniste...).
-  + problématique pas de réactivité, on dédie un thread ou on à besoin d'un système complex.
-  + Présenté NewMadeleine : async ...
-
-  + Les interuption semble intérécente mais on une grande latance... Mathieu à vue ça dans sont stage... en perspective il dit qu'un mécanisme d'interruption en espace utilisateur serai interraisant à exploré.
-
-* problématiques / objectifs
-  + sujet
-    - un nouveau mecanisme d'interruption en sepace utilisateur
-    - on cherche a éliminé les incovégants du polling
-    - contentions...
-    - revenir sur un mécanisme plus normal
-  + objectifs
-    - faire des communication a traver le réseau BXI
-    - comprendre sont fonctionnement uintr (commen les utiliser pour)
-    - Driver shm NewMadeline car ipc
-    - Faire progresser les come
-    <!-- - la même avec BXI
-    - on utiliser les interruption pour lancer le interruptions -->
-    - retirer les pb du polling (list des pb)
-
-* Pris en main des uintr / Exploration de uintr
-
-  + sur processeur récent
-  + difficulté d'accès
-  + naissaisite un patch de noyaux et une version récente de GCC
-  + fonctionnement...
-  + similaritude avec les signaux et interruption materiel
-  + 
-  + J'ai du compiler est installer le patch du noyau
-  + 
-  + comparaison avec les signaux (parler de tous les testes que j'ai fait. J'ai tester différante façon pour partager le FD)
-  + problème corriger avec la alt_stack
-  + Performance du mécanisme
-    - Dans un premier temps j'ai pas bind les thread par pu donc j'avais de mauvais résultats.
-    - J'ai fait différents bind (on vois que c'est similaire sauf quand on passe entre 2 NUMA)
-    - si on monte la frequence c'est mieux (turbo boost)
-    - 
 
 * Intégration dans NewMadeleine
   + Présenté NewMadeleine details
@@ -116,9 +47,3 @@ On à déjà un recv post et quand l'utilisateur post on lui donne...
 * bilan
 
 * consomation, pas d'attente active
-
-pour la contention :
-ligne de cache
-coérance d'accé à la mémoire 
-donc multithream pb
-gradularité taille de la ligne de cache 128

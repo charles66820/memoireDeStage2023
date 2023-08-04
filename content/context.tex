@@ -54,8 +54,8 @@ On voit donc qu'il n'est pas préférable d'utiliser les appels système, car le
 En HPC, on programme donc directement la carte réseau à partir de l'espace utilisateur (OS bypass en anglais).
 Pour cela, on initialise toujours la carte à partir du noyau, mais on fait une projection de la mémoire et des registres de la carte réseau dans l'espace d'adressage virtuel du processus utilisateur.
 
-Pour transmettre des événements à l'utilisateur, les périphériques utilisent généralement les interruptions ordinaires, qui passent par le système donc on ne les utilise très peu en HPC.
-En HPC on privilégie donc le polling que nous verrons en se \ref{sec:polling}.
+Pour transmettre des événements à l'utilisateur, les périphériques utilisent généralement les interruptions ordinaires, qui passent par le système donc on les utilise très peu en HPC.
+En HPC on privilégie donc le polling que nous verrons en section \ref{sec:polling}.
 
 \subsection{Les interruptions matérielles}
 
