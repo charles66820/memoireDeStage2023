@@ -46,7 +46,20 @@ En effet, pour passer par le noyau, on utilise généralement des appels systèm
 Un appel système effectue un changement de contexte (context switch) pour passer de l'espace utilisateur à l'espace noyau.
 Ce changement de contexte est coûteux car il sauvegarde les états du code de l'utilisateur avant d'exécuter celui du noyau.
 save états du process (registres, registre vectoriel, le pc, esp, flags...),
-% TODO: parler de la MMU
+% TODO: parler de la MMU gère la table des page
+
+% On change de table de page au près du MMU
+% Le cache du MMU est invalidé
+% On payant 2 accès mémoire
+
+% Le MMU permet la traduction des adresse physique en adresse virtuel.
+% Pour le poséde un pointer vers la table des page du processus en cours.
+% L'accès à une table de page est couteux en accès mémoire (2 accès mémoires par page).
+% Le TLB permet de mettre en cache les dernier pages manipuler pour ne pas payer c'est accès mémoire supplémentaire.
+% Sans ce TLB tous les accès mémoire du code utilisateur couteuré bien plus chére.
+% Quand on fait un context switch le pointeur vers la table de pages change et le TLB ce retouve invalidé car le noyau utilise aussi des pages et donc écrase la TLB.
+% Donc le context switch et très couteux pour le MMU qui fait la traduction grâce à la table des page et le TLB.
+
 Une fois le changement de contexte effectué, le code noyau de l'appel système s'exécute avant de refaire un changement de contexte pour, cette fois, passer de l'espace noyau à l'espace utilisateur et ainsi restaurer l'état du code de l'utilisateur.
 Le noyau peut aussi être amené à mettre à jour ses structures internes, exécuter des tâches qu'il avait mises à faire plus tard, etc.
 Donc, le fait de passer par un appel système coûte plusieurs microsecondes.
@@ -118,7 +131,7 @@ Les cartes implémente donc l'API de communication \emph{Portal4} \cite{portals4
 Les utilisateurs utilisent donc cette API pour envoyer et recevoir des paquets réseau.
 
 % Une des extensions \emph{Portal4} de \emph{BXI} permettent d'enregistrer un handler à une queue d'évènement (PtlEQAllocAsync())
-% \url{https://bitbucketbdsfr.fsc.atos-services.net/projects/SHBRIL/repos/bxi-portals/browse/portals/PtlEQAllocAsync.3} TODO:
+% \url{https://bitbucketbdsfr.fsc.atos-services.net/projects/SHBRIL/repos/bxi-portals/browse/portals/PtlEQAllocAsync.3} TODO: pas accès
 
 \subsection{MPI}
 
@@ -176,7 +189,7 @@ On peut donc la considérer comme une implémentation du standard MPI avec des f
 Elle est développée au Centre Inria de l'université de Bordeaux.
 Elle est basée sur un système de progression événementielle, ce qui lui permet d'être asynchrone.
 Elle est composée de modules, ce qui lui permet de charger dynamiquement des stratégies d'optimisation sur les paquets.
-Ces stratégies sont l'agrégation de paquets, l'utilisation de priorités et le multi-rail. /* TODO: précision multi-rail/split_balance */.
+Ces stratégies sont l'agrégation de paquets, l'utilisation de priorités et le multi-rail. % /* TODO: précision multi-rail/split_balance */
 Elle possède également un système de drivers pour supporter différents types de communications, tels que des réseaux
 (e.g. portals4 pour BXI, ibverbs pour InfiniBand, psm2 pour OmniPath, ofi pour "Open Fabrics Interfaces", TCP) % Slingshot => cci ?
 et des communications locales (shm pour "mémoire partagée", socket, self).
@@ -193,7 +206,7 @@ Les signaux que l'utilisateur peut recevoir correspondent à des exceptions syst
 à des informations (e.g. \emph{SIGTERM} pour demander au processus de se fermer) ou à des notifications d'autres processus (i.e. \emph{SIGUSR1} et \emph{SIGUSR2}).
 Il est possible de masquer la réception de certains signaux en utilisant des appels système de masquage.
 
-\subsection{Travaux antérieur}
+\subsection{Travaux antérieurs}
 
 TODO: Amélioré ? le faire pour tous ce qui existe
 
@@ -211,14 +224,15 @@ Ces travaux visent à réduire la latence due au passage par un driver noyau.
 Ils abordent également les perspectives de traitement direct des interruptions depuis l'espace utilisateur, ce qui a conduit à ce stage.
 
 
-\subsection{Définitions} % TODO:  nommé autrement ?
+\subsection{Définitions}
 
 Il est important d'avoir les définitions suivantes en tête :
 \begin{itemize}
-  \item \emph{CPU} désigne la puce dans sa totalité.
-  \item \emph{core} ou \emph{processeur} désigne l'un des coeur du \emph{CPU}.
-  \item \emph{core logique}, \emph{processeur logique} ou \emph{unité de calcul} % (pu pour Process Unit) ou threads materiel
-  désigne une unité de calcul au sein d'un coeur. Il y en a deux par core dans les CPUs \intel{} Sapphire Rapids fourni par \atos{}.
+  \item \emph{CPU} : désigne la puce dans sa totalité.
+  \item \emph{core} ou \emph{processeur} : désigne l'un des coeurs du \emph{CPU}.
+  \item \emph{core logique}, \emph{processeur logique} ou \emph{unité de calcul} : % (pu pour Process Unit) ou threads materiel
+  désigne une unité de calcul au sein d'un coeur. Il y en a deux par coeur dans les CPUs \intel{} Sapphire Rapids fourni par \atos{}.
 \end{itemize}
 
-/* TODO: besoin d'expliquer ? : Un processus peut avoir plusieurs threads, un thread correspond à un fil d'execution de code. Et tous les threads au sien d'un même processus partage le même espace d'adressage virtuel. */
+Petit rappel : Un processus peut avoir plusieurs threads, un thread correspond à un fil d'exécution de code.
+Et tous les threads au sein d'un même processus partage le même espace d'adressage virtuel.

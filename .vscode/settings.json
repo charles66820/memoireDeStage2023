@@ -1,17 +1,26 @@
 {
   "cSpell.words": [
     "Afek",
+    "bindé",
     "Correia",
     "Crummey",
     "Fatourou",
     "Hendler",
+    "ibverbs",
     "Incze",
     "Kallimanis",
     "Kogan",
     "Mellor",
+    "MVAPICH",
+    "Omni",
     "Petrank",
     "Ravindran",
+    "rdma",
     "Shavit",
-    "Tzafrir"
+    "SIGFPE",
+    "SIGSEGV",
+    "SIGTERM",
+    "Tzafrir",
+    "Xascale"
   ]
 }
