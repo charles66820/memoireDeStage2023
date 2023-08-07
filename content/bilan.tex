@@ -1,11 +1,25 @@
 \section{Bilan}
 
-% Conclure sur ce que j'ai fait
-% Ce qui à été fait et qui n'été pas prévue (Sig_shm version)
-% Faire la relation avec les cours et mais connaissances (voire pour le faire aussi avant)
-% Parlais de ce qui n'est pas encore fini
-% Parlais de ce que j'ai pensé du stage (voir les consigne pour bien le faire)
-% Parlais de la poursuite en thèse
-% 
+Comme nous l'avons vu, ce stage se place dans le contexte des communications au sein des clusters de calcul destinés au HPC.
+Le stage se concentre sur les communications internes à un noeud par simplification pour faire une preuve de concept.
+Nous nous demandons s'il est possible de plus avoir à faire de polling actif pour améliorer la réactivité grâce à des interruptions en espace utilisateur.
 
-% conséquence de mon passage, les équipe ne conaissaipas les uintr et maintemnt oui
+Pour les objectifs :
+\begin{itemize}
+  \item Nous avons vu le fonctionnement du mécanisme des interruptions en espace utilisateur et comment on peut l'utiliser pour les communications.
+  \item Ensuite nous avons vu que la latence des \uintr{} est raisonnable comparée au passage par le noyau.
+  \item Puis on a vu que nous avons intégré la progression à partir des handlers dans la bibliothèque \emph{NewMadeleine}
+  mais il reste encore des choses à faire comme les interruptions pour la progression des envois,
+  la correction des bugs, finaliser le support des gros paquets, et l'utilisation des interruptions dans le cas de progression multi-threadé avec \emph{Pioman}.
+  \item Nous avons aussi vu comment nous avons désactivé le polling pour la réception et presque pour l'émission.
+  \item On a montré que l'utilisation des \uintr{} permet bien l'\emph{overlap} pour la réception.
+  Le comportement devrait être similaire pour l'émission.
+\end{itemize}
+
+Nous avons également fait une version du driver qui utilise les signaux, cette version n'était pas prévue initialement.
+
+Le stage m'a beaucoup intéressé et j'ai appris pleins de choses autour du système, des bibliothèques de communications, du fonctionnement de la recherche, etc.
+Mon travail a permis aussi de faire connaître en détail le nouveau mécanisme des \uintr{} aux équipes d'\emph{Inria} et d'\atos{}.
+
+Le sujet de ce stage avait pour finalité de déboucher sur une thèse pour utiliser les \uintr{} au niveau du réseau \emph{BXI}.
+Je continuerai donc en thèse ainsi je pourrai finir ce qu'il reste à faire et continuer les objectifs globaux.

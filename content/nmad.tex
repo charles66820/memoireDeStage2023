@@ -2,9 +2,6 @@
 
 Pour cette partie, j'ai utilisé ce que j'ai appris en cours :
 
-5 Intégration dans NewMadeleine
-5.1 Présentation des détails de NewMadeleine
-
 \begin{itemize}
   \item De \emph{Programmation des Architectures Parallèles} (PAP) et de \emph{Langages du Parallélisme} pour la compréhension du fonctionnement interne des bibliothèques \emph{MPI} et pour aborder différentes problématiques liées à la programmation parallèle.
   \item De \emph{Projet de Programmation} (PdP) et de \emph{Lecture d'article et documentation scientifique} pour effectuer les recherches bibliographiques.
@@ -244,7 +241,7 @@ L'origine des files \emph{wait-free} provient des files \emph{lock-free}.
 La première file \emph{lock-free} est celle de Michael \& Scott \cite{MICHAEL19981}, qui est nommée \emph{MSQueue} dans la littérature.
 
 Une première file \emph{wait-free}, basée sur le même fonctionnement que la \emph{MSQueue},
-est proposée par A. Kogan \& E. Petrank \cite{10.1145/1941553.1941585} et est nommée \emph{KPQueue}.
+est proposée par A. Kogan \& E. Petrank \cite{10.1145/2038037.1941585} et est nommée \emph{KPQueue}.
 Cependant, cette file présente des performances très limitées et ne passe pas à l'échelle.
 Plusieurs autres files ont été proposées pour améliorer les performances,
 comme la \emph{FCQueue} de D. Hendler \& I. Incze \& N. Shavit \& M. Tzafrir \cite{10.1145/1810479.1810540}.
@@ -303,14 +300,6 @@ L'amélioration de la \emph{lfqueue} nous a permis de corriger les deadlocks.
 % parlé des échecs avec les instances de connexion (_status) au lieu des p_drv pour la pending_drv
 
 \subsection{Suite de tests}
-
-\emph{NewMadeleine} possède une suite de tests très complete qui test toutes ses interfaces, la charge, etc.
-Nous avons donc executer la suite de tests après nos modification. Environ 87 tests passe sur les 93.
-Les tests qui ne passe pas sont généralement les collective qui engendre beaucoup de communications et certains test RPC,
-ces tests appel du code utilisateur qui peut utiliser des fonction non "async safe" et donc posé un problème avec le handler d'interruption.
-Le fait que ces tests ne passe pas est du un problèmes de modification concurrent des \emph{pw}.
-Nous avons une solution temporaire où l'on masque les interruptions qui nous permet de passer tous les tests sauf certain RPC.
-Ce bug reste donc à corriger.
 
 \emph{NewMadeleine} possède une suite de tests très complète qui teste toutes ses interfaces, la charge, etc.
 Nous avons donc exécuté la suite de tests après nos modifications. Environ 87 tests passent sur les 93.

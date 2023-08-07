@@ -18,7 +18,7 @@ Ces simulations simulent la dynamique des fluides, la résistance structurelle, 
 
 \bigskip
 
-De nos jours, les supercalculateurs sont composés de plusieurs ordinateurs que l'on appelle noeuds de calcul.
+De nos jours, les supercalculateurs sont composés de plusieurs ordinateurs que l'on appelle "noeuds de calcul".
 Ceux-ci sont regroupés en grappes (clusters) et sont tous vus et utilisés comme une seule grande machine.
 Ce fonctionnement soulève des questions concernant la répartition du calcul, la distribution de la mémoire et la communication entre les différents noeuds.
 Dans le contexte du stage, nous nous sommes concentrés sur les communications entre noeuds.
@@ -26,7 +26,7 @@ Les noeuds sont connectés entre eux par un réseau haute performance dédié au
 La gestion des noeuds est généralement effectuée par un second réseau plus traditionnel (Ethernet ; TCP/IP).
 Les réseaux haute performance ont une latence de l'ordre de quelques microsecondes ce qui n'est pas le cas des réseaux classiques qui ont une plus grande latence.
 Avec ce type de réseaux, le débit est aussi bien plus élevé.
-Chaque noeud possède une ou plusieurs cartes réseau et il faut les programmer.
+Chaque noeud possède une ou plusieurs cartes réseaux et il faut les programmer.
 
 \subsection{OS bypass}
 
@@ -42,23 +42,28 @@ Pour cela, le système a 2 espaces :
 
 En temps normal, les périphériques sont programmés directement depuis le noyau du système d'exploitation, cela est fait pour des raisons de sécurité et de standardisation des accès.
 Cependant, lorsque l'on passe par le noyau, il y a un surcoût qui n'est pas négligeable dans notre cas.
-En effet, pour passer par le noyau, on utilise généralement des appels système qui prennent la forme d'une fonction.
+En effet, pour passer par le noyau, on utilise généralement des appels systèmes qui prennent la forme d'une fonction.
 Un appel système effectue un changement de contexte (context switch) pour passer de l'espace utilisateur à l'espace noyau.
 Ce changement de contexte est coûteux car il sauvegarde les états du code de l'utilisateur avant d'exécuter celui du noyau.
-save états du process (registres, registre vectoriel, le pc, esp, flags...),
-% TODO: parler de la MMU gère la table des page
+La sauvegarde de ces états consiste à sauvegarder les registres, les registres vectoriels, le pointeur d'instruction, le pointeur de pile et les flags d'états.
+Ce qui rend coûteux le changement de contexte c'est aussi la \emph{MMU} pour "Memory Management Unit".
+Cette unité permet la traduction des adresses virtuelles en adresses physiques et doit être mise à jour à chaque changement de contexte.
+Cette \emph{MMU} utilise des tables de pages pour la traduction et ces tables sont propres à un processus ou au noyau.
+L'adresse de cette table est mise à jour pendant le changement de contexte ce qui mène à l'invalidation des caches de la \emph{MMU}.
+La traduction des adresses virtuelles est coûteuse car il faut la page donc faire des accès mémoire supplémentaire,
+pour absorber ce coût la \emph{MMU} possède donc un cache nommé \emph{TLB}.
+Ce \emph{TLB} garde les dernières traductions d'adresse, donc quand on fait un changement de contexte, il se retrouve changé par l'exécution du code du noyau ce qui fait que lors du changement de contexte du retour,
+toutes les utilisations suivantes de la mémoire vont être coûteuses car il faut refaire les traductions d'adresse virtuelle en adresse physique pour recharger le \emph{TLB}.
 
 % On change de table de page au près du MMU
 % Le cache du MMU est invalidé
-% On payant 2 accès mémoire
 
-% Le MMU permet la traduction des adresse physique en adresse virtuel.
-% Pour le poséde un pointer vers la table des page du processus en cours.
-% L'accès à une table de page est couteux en accès mémoire (2 accès mémoires par page).
+% Pour le possède un pointer vers la table des page du processus en cours.
+% L'accès à une table de page est coûteux en accès mémoire (2 accès mémoires par page).
 % Le TLB permet de mettre en cache les dernier pages manipuler pour ne pas payer c'est accès mémoire supplémentaire.
-% Sans ce TLB tous les accès mémoire du code utilisateur couteuré bien plus chére.
-% Quand on fait un context switch le pointeur vers la table de pages change et le TLB ce retouve invalidé car le noyau utilise aussi des pages et donc écrase la TLB.
-% Donc le context switch et très couteux pour le MMU qui fait la traduction grâce à la table des page et le TLB.
+% Sans ce TLB tous les accès mémoire du code utilisateur coûteraient bien plus chère.
+% Quand on fait un context switch le pointeur vers la table de pages change et le TLB ce retrouve invalidé car le noyau utilise aussi des pages et donc écrase la TLB.
+% Donc le context switch et très coûteux pour le MMU qui fait la traduction grâce à la table des page et le TLB.
 
 Une fois le changement de contexte effectué, le code noyau de l'appel système s'exécute avant de refaire un changement de contexte pour, cette fois, passer de l'espace noyau à l'espace utilisateur et ainsi restaurer l'état du code de l'utilisateur.
 Le noyau peut aussi être amené à mettre à jour ses structures internes, exécuter des tâches qu'il avait mises à faire plus tard, etc.
@@ -127,10 +132,10 @@ Les cartes \emph{BXI} sont capables de faire progresser les communications rése
 Le CPU a juste à soumettre une commande dans une file sur la carte, et elle s'occupe de tout.
 Le CPU peut ensuite récupérer une file d'événements pour savoir ce qu'il s'est passé, en somme faire un poll.
 Les cartes sont également capables de déclencher des interruptions.
-Les cartes implémente donc l'API de communication \emph{Portal4} \cite{portals4}.
+Les cartes implémente donc l'API de communication \emph{Portals4} \cite{portals4}.
 Les utilisateurs utilisent donc cette API pour envoyer et recevoir des paquets réseau.
 
-% Une des extensions \emph{Portal4} de \emph{BXI} permettent d'enregistrer un handler à une queue d'évènement (PtlEQAllocAsync())
+% Une des extensions \emph{Portals4} de \emph{BXI} permettent d'enregistrer un handler à une queue d'évènement (PtlEQAllocAsync())
 % \url{https://bitbucketbdsfr.fsc.atos-services.net/projects/SHBRIL/repos/bxi-portals/browse/portals/PtlEQAllocAsync.3} TODO: pas accès
 
 \subsection{MPI}
@@ -150,7 +155,7 @@ Cette version se contente de poster la communication et rend immédiatement la m
 Pour la progression et vérifier la terminaison, il faut donc utiliser d'autres fonctions comme \code{MPI_Test}, qui vérifie la progression et la fait si nécessaire, et la fonction \code{MPI_Wait}, qui attend activement la terminaison et s'occupe de la progression si nécessaire.
 Il est important de noter que le standard MPI ne précise pas si la progression se fait en tâche de fond ou non, c'est aux implémentations de la norme MPI de choisir.
 C'est pour cela que la progression peut se faire au niveau des fonctions \code{MPI_Wait} et \code{MPI_Test}, ou être faite avant, et donc l'appel aux fonctions s'occupe juste de la terminaison.
-L'envoi des messages peut donc être asynchrone. /* gardé cette phrase ? */
+L'envoi des messages peut donc être asynchrone. % /* gardé cette phrase ? */
 
 \subsubsection{Les communications collective}
 
@@ -208,13 +213,6 @@ Il est possible de masquer la réception de certains signaux en utilisant des ap
 
 \subsection{Travaux antérieurs}
 
-TODO: Amélioré ? le faire pour tous ce qui existe
-
-% Feedback d'Alexandre
-% Pour la progression des communications, il y a des choses chez MVAPICH (avec du rdma), chez MPICH (avec un thread dédié, mais non-bindé), dans MxM pour InfiniBand (thread dédié)
-% Pour éviter le polling et exploiter les interruptions, ça se faisait jusque là avec un appel système bloquant. Ça existe en particulier dans l'API verbs d'InfiniBand.
-
-% Cité ce qui à été fait pour la progression dan NewMadeleine...
 Les origines de \emph{NewMadeleine} sont décrites dans cet article \cite{aumage:inria-00127356}.
 Le système de progression dans \emph{NewMadeleine} fait l'objet de plusieurs travaux.
 le fonctionnement du système de progression opportuniste \emph{Pioman} est décrit dans cet article\cite{denis:hal-01087775}.
@@ -223,6 +221,11 @@ Concernant l'utilisation des interruptions pour transmettre des événements ré
 Ces travaux visent à réduire la latence due au passage par un driver noyau.
 Ils abordent également les perspectives de traitement direct des interruptions depuis l'espace utilisateur, ce qui a conduit à ce stage.
 
+Dans cette section il manque les travaux fait pour la progression des communications avec \emph{MVAPICH}, \emph{MPICH}, \emph{MxM}, etc.
+%TODO: le faire pour tous ce qui existe
+% Feedback d'Alexandre
+% Pour la progression des communications, il y a des choses chez MVAPICH (avec du rdma), chez MPICH (avec un thread dédié, mais non-bindé), dans MxM pour InfiniBand (thread dédié)
+% Pour éviter le polling et exploiter les interruptions, ça se faisait jusque là avec un appel système bloquant. Ça existe en particulier dans l'API verbs d'InfiniBand.
 
 \subsection{Définitions}
 
