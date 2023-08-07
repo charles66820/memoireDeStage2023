@@ -20,7 +20,7 @@
 }
 
 @inproceedings{denis:hal-01087775,
-  TITLE = {{Pioman: a pthread-based Multithreaded Communication Engine}},
+  TITLE = {{pioman: a pthread-based Multithreaded Communication Engine}},
   AUTHOR = {Denis, Alexandre},
   URL = {https://inria.hal.science/hal-01087775},
   BOOKTITLE = {{Euromicro International Conference on Parallel, Distributed and Network-based Processing}},
@@ -162,25 +162,25 @@
   abstract = {Most multiprocessors are multiprogrammed to achieve acceptable response time and to increase their utilization. Unfortunately, inopportune preemption may significantly degrade the performance of synchronized parallel applications. To address this problem, researchers have developed two principal strategies for a concurrent, atomic update of shared data structures: (1)preemption-safe lockingand (2)nonblocking(lock-free)algorithms. Preemption-safe locking requires kernel support. Nonblocking algorithms generally require a universal atomic primitive such ascompare-and-swaporload-linked/store-conditionaland are widely regarded as inefficient. We evaluate the performance of preemption-safe lock-based and nonblocking implementations of important data structures—queues, stacks, heaps, and counters—including nonblocking and lock-based queue algorithms of our own, in microbenchmarks and real applications on a 12-processor SGI Challenge multiprocessor. Our results indicate that our nonblocking queue consistently outperforms the best known alternatives and that data-structure-specific nonblocking algorithms, which exist for queues, stacks, and counters, can work extremely well. Not only do they outperform preemption-safe lock-based algorithms on multiprogrammed machines, they also outperform ordinary locks on dedicated machines. At the same time, since general-purpose nonblocking techniques do not yet appear to be practical, preemption-safe locks remain the preferred alternative for complex data structures: they outperform conventional locks by significant margins on multiprogrammed systems.}
 }
 
-% @article{10.1145/2038037.1941585,
-%   author     = {Kogan, Alex and Petrank, Erez},
-%   title      = {Wait-Free Queues with Multiple Enqueuers and Dequeuers},
-%   year       = {2011},
-%   issue_date = {August 2011},
-%   publisher  = {Association for Computing Machinery},
-%   address    = {New York, NY, USA},
-%   volume     = {46},
-%   number     = {8},
-%   issn       = {0362-1340},
-%   url        = {https://doi.org/10.1145/2038037.1941585},
-%   doi        = {10.1145/2038037.1941585},
-%   abstract   = {The queue data structure is fundamental and ubiquitous. Lock-free versions of the queue are well known. However, an important open question is whether practical wait-free queues exist. Until now, only versions with limited concurrency were proposed. In this paper we provide a design for a practical wait-free queue. Our construction is based on the highly efficient lock-free queue of Michael and Scott. To achieve wait-freedom, we employ a priority-based helping scheme in which faster threads help the slower peers to complete their pending operations. We have implemented our scheme on multicore machines and present performance measurements comparing our implementation with that of Michael and Scott in several system configurations.},
-%   journal    = {SIGPLAN Not.},
-%   month      = {feb},
-%   pages      = {223–234},
-%   numpages   = {12},
-%   keywords   = {concurrent queues, wait-free algorithms}
-% }
+@article{10.1145/2038037.1941585,
+  author     = {Kogan, Alex and Petrank, Erez},
+  title      = {Wait-Free Queues with Multiple Enqueuers and Dequeuers},
+  year       = {2011},
+  issue_date = {August 2011},
+  publisher  = {Association for Computing Machinery},
+  address    = {New York, NY, USA},
+  volume     = {46},
+  number     = {8},
+  issn       = {0362-1340},
+  url        = {https://doi.org/10.1145/2038037.1941585},
+  doi        = {10.1145/2038037.1941585},
+  abstract   = {The queue data structure is fundamental and ubiquitous. Lock-free versions of the queue are well known. However, an important open question is whether practical wait-free queues exist. Until now, only versions with limited concurrency were proposed. In this paper we provide a design for a practical wait-free queue. Our construction is based on the highly efficient lock-free queue of Michael and Scott. To achieve wait-freedom, we employ a priority-based helping scheme in which faster threads help the slower peers to complete their pending operations. We have implemented our scheme on multicore machines and present performance measurements comparing our implementation with that of Michael and Scott in several system configurations.},
+  journal    = {SIGPLAN Not.},
+  month      = {feb},
+  pages      = {223–234},
+  numpages   = {12},
+  keywords   = {concurrent queues, wait-free algorithms}
+}
 
 @inproceedings{10.1145/1941553.1941585,
   author    = {Kogan, Alex and Petrank, Erez},
@@ -218,23 +218,23 @@
   series    = {SPAA '10}
 }
 
-% @inproceedings{10.1145/2145816.2145849,
-%   author    = {Fatourou, Panagiota and Kallimanis, Nikolaos D.},
-%   title     = {Revisiting the Combining Synchronization Technique},
-%   year      = {2012},
-%   isbn      = {9781450311601},
-%   publisher = {Association for Computing Machinery},
-%   address   = {New York, NY, USA},
-%   url       = {https://doi.org/10.1145/2145816.2145849},
-%   doi       = {10.1145/2145816.2145849},
-%   abstract  = {Fine-grain thread synchronization has been proved, in several cases, to be outperformed by efficient implementations of the combining technique where a single thread, called the combiner, holding a coarse-grain lock, serves, in addition to its own synchronization request, active requests announced by other threads while they are waiting by performing some form of spinning. Efficient implementations of this technique significantly reduce the cost of synchronization, so in many cases they exhibit much better performance than the most efficient finely synchronized algorithms.In this paper, we revisit the combining technique with the goal to discover where its real performance power resides and whether or how ensuring some desired properties (e.g., fairness in serving requests) would impact performance. We do so by presenting two new implementations of this technique; the first (CC-Synch) addresses systems that support coherent caches, whereas the second (DSM-Synch) works better in cacheless NUMA machines. In comparison to previous such implementations, the new implementations (1) provide bounds on the number of remote memory references (RMRs) that they perform, (2) support a stronger notion of fairness, and (3) use simpler and less basic primitives than previous approaches. In all our experiments, the new implementations outperform by far all previous state-of-the-art combining-based and fine-grain synchronization algorithms. Our experimental analysis sheds light to the questions we aimed to answer.Several modern multi-core systems organize the cores into clusters and provide fast communication within the same cluster and much slower communication across clusters. We present an hierarchical version of CC-Synch, called H-Synch which exploits the hierarchical communication nature of such systems to achieve better performance. Experiments show that H-Synch significantly outper forms previous state-of-the-art hierarchical approaches.We provide new implementations of common shared data structures (like stacks and queues) based on CC-Synch, DSM-Synch and H-Synch. Our experiments show that these implementations outperform by far all previous (fine-grain or combined-based) implementations of shared stacks and queues.},
-%   booktitle = {Proceedings of the 17th ACM SIGPLAN Symposium on Principles and Practice of Parallel Programming},
-%   pages     = {257–266},
-%   numpages  = {10},
-%   keywords  = {concurrent data structures, blocking algorithms, hierarchical algorithms, combining, synchronization techniques},
-%   location  = {New Orleans, Louisiana, USA},
-%   series    = {PPoPP '12}
-% }
+@inproceedings{10.1145/2145816.2145849,
+  author    = {Fatourou, Panagiota and Kallimanis, Nikolaos D.},
+  title     = {Revisiting the Combining Synchronization Technique},
+  year      = {2012},
+  isbn      = {9781450311601},
+  publisher = {Association for Computing Machinery},
+  address   = {New York, NY, USA},
+  url       = {https://doi.org/10.1145/2145816.2145849},
+  doi       = {10.1145/2145816.2145849},
+  abstract  = {Fine-grain thread synchronization has been proved, in several cases, to be outperformed by efficient implementations of the combining technique where a single thread, called the combiner, holding a coarse-grain lock, serves, in addition to its own synchronization request, active requests announced by other threads while they are waiting by performing some form of spinning. Efficient implementations of this technique significantly reduce the cost of synchronization, so in many cases they exhibit much better performance than the most efficient finely synchronized algorithms.In this paper, we revisit the combining technique with the goal to discover where its real performance power resides and whether or how ensuring some desired properties (e.g., fairness in serving requests) would impact performance. We do so by presenting two new implementations of this technique; the first (CC-Synch) addresses systems that support coherent caches, whereas the second (DSM-Synch) works better in cacheless NUMA machines. In comparison to previous such implementations, the new implementations (1) provide bounds on the number of remote memory references (RMRs) that they perform, (2) support a stronger notion of fairness, and (3) use simpler and less basic primitives than previous approaches. In all our experiments, the new implementations outperform by far all previous state-of-the-art combining-based and fine-grain synchronization algorithms. Our experimental analysis sheds light to the questions we aimed to answer.Several modern multi-core systems organize the cores into clusters and provide fast communication within the same cluster and much slower communication across clusters. We present an hierarchical version of CC-Synch, called H-Synch which exploits the hierarchical communication nature of such systems to achieve better performance. Experiments show that H-Synch significantly outper forms previous state-of-the-art hierarchical approaches.We provide new implementations of common shared data structures (like stacks and queues) based on CC-Synch, DSM-Synch and H-Synch. Our experiments show that these implementations outperform by far all previous (fine-grain or combined-based) implementations of shared stacks and queues.},
+  booktitle = {Proceedings of the 17th ACM SIGPLAN Symposium on Principles and Practice of Parallel Programming},
+  pages     = {257–266},
+  numpages  = {10},
+  keywords  = {concurrent data structures, blocking algorithms, hierarchical algorithms, combining, synchronization techniques},
+  location  = {New Orleans, Louisiana, USA},
+  series    = {PPoPP '12}
+}
 
 @article{10.1145/2370036.2145849,
   author     = {Fatourou, Panagiota and Kallimanis, Nikolaos D.},
@@ -256,24 +256,24 @@
   keywords   = {combining, hierarchical algorithms, concurrent data structures, blocking algorithms, synchronization techniques}
 }
 
-% @inproceedings{10.1145/3018743.3019022,
-%   author    = {Ramalhete, Pedro and Correia, Andreia},
-%   title     = {POSTER: A Wait-Free Queue with Wait-Free Memory Reclamation},
-%   year      = {2017},
-%   isbn      = {9781450344937},
-%   publisher = {Association for Computing Machinery},
-%   address   = {New York, NY, USA},
-%   url       = {https://doi.org/10.1145/3018743.3019022},
-%   doi       = {10.1145/3018743.3019022},
-%   abstract  = {Queues are a widely deployed data structure. They are used extensively in many multi threaded applications, or as a communication mechanism between threads or processes. We propose a new linearizable multi-producer-multi-consumer queue we named Turn queue, with wait-free progress bounded by the number of threads, and with wait-free bounded memory reclamation. Its main characteristics are: a simple algorithm that does no memory allocation apart from creating the node that is placed in the queue, a new wait-free consensus algorithm using only the atomic instruction compare-and-swap (CAS), and is easy to plugin with other algorithms for either enqueue or dequeue methods.},
-%   booktitle = {Proceedings of the 22nd ACM SIGPLAN Symposium on Principles and Practice of Parallel Programming},
-%   pages     = {453–454},
-%   numpages  = {2},
-%   keywords  = {non-blocking queue, low latency, wait-free},
-%   location  = {Austin, Texas, USA},
-%   series    = {PPoPP '17},
-%   note       = {\url{https://github.com/pramalhe/ConcurrencyFreaks/blob/master/papers/crturnqueue-2016.pdf}}
-% }
+@inproceedings{10.1145/3018743.3019022,
+  author    = {Ramalhete, Pedro and Correia, Andreia},
+  title     = {POSTER: A Wait-Free Queue with Wait-Free Memory Reclamation},
+  year      = {2017},
+  isbn      = {9781450344937},
+  publisher = {Association for Computing Machinery},
+  address   = {New York, NY, USA},
+  url       = {https://doi.org/10.1145/3018743.3019022},
+  doi       = {10.1145/3018743.3019022},
+  abstract  = {Queues are a widely deployed data structure. They are used extensively in many multi threaded applications, or as a communication mechanism between threads or processes. We propose a new linearizable multi-producer-multi-consumer queue we named Turn queue, with wait-free progress bounded by the number of threads, and with wait-free bounded memory reclamation. Its main characteristics are: a simple algorithm that does no memory allocation apart from creating the node that is placed in the queue, a new wait-free consensus algorithm using only the atomic instruction compare-and-swap (CAS), and is easy to plugin with other algorithms for either enqueue or dequeue methods.},
+  booktitle = {Proceedings of the 22nd ACM SIGPLAN Symposium on Principles and Practice of Parallel Programming},
+  pages     = {453–454},
+  numpages  = {2},
+  keywords  = {non-blocking queue, low latency, wait-free},
+  location  = {Austin, Texas, USA},
+  series    = {PPoPP '17},
+  note       = {\url{https://github.com/pramalhe/ConcurrencyFreaks/blob/master/papers/crturnqueue-2016.pdf}}
+}
 
 @article{10.1145/3155284.3019022,
   author     = {Ramalhete, Pedro and Correia, Andreia},
@@ -323,23 +323,23 @@
   url      = {https://doi.org/10.1007/s00224-013-9491-y}
 }
 
-% @inproceedings{10.1145/2851141.2851168,
-%   author    = {Yang, Chaoran and Mellor-Crummey, John},
-%   title     = {A Wait-Free Queue as Fast as Fetch-and-Add},
-%   year      = {2016},
-%   isbn      = {9781450340922},
-%   publisher = {Association for Computing Machinery},
-%   address   = {New York, NY, USA},
-%   url       = {https://doi.org/10.1145/2851141.2851168},
-%   doi       = {10.1145/2851141.2851168},
-%   abstract  = {Concurrent data structures that have fast and predictable performance are of critical importance for harnessing the power of multicore processors, which are now ubiquitous. Although wait-free objects, whose operations complete in a bounded number of steps, were devised more than two decades ago, wait-free objects that can deliver scalable high performance are still rare.In this paper, we present the first wait-free FIFO queue based on fetch-and-add (FAA). While compare-and-swap (CAS) based non-blocking algorithms may perform poorly due to work wasted by CAS failures, algorithms that coordinate using FAA, which is guaranteed to succeed, can in principle perform better under high contention. Along with FAA, our queue uses a custom epoch-based scheme to reclaim memory; on x86 architectures, it requires no extra memory fences on our algorithm's typical execution path. An empirical study of our new FAA-based wait-free FIFO queue under high contention on four different architectures with many hardware threads shows that it outperforms prior queue designs that lack a wait-free progress guarantee. Surprisingly, at the highest level of contention, the throughput of our queue is often as high as that of a microbenchmark that only performs FAA. As a result, our fast wait-free queue implementation is useful in practice on most multi-core systems today. We believe that our design can serve as an example of how to construct other fast wait-free objects.},
-%   booktitle = {Proceedings of the 21st ACM SIGPLAN Symposium on Principles and Practice of Parallel Programming},
-%   articleno = {16},
-%   numpages  = {13},
-%   keywords  = {non-blocking queue, wait-free, fast-path-slow-path},
-%   location  = {Barcelona, Spain},
-%   series    = {PPoPP '16}
-% }
+@inproceedings{10.1145/2851141.2851168,
+  author    = {Yang, Chaoran and Mellor-Crummey, John},
+  title     = {A Wait-Free Queue as Fast as Fetch-and-Add},
+  year      = {2016},
+  isbn      = {9781450340922},
+  publisher = {Association for Computing Machinery},
+  address   = {New York, NY, USA},
+  url       = {https://doi.org/10.1145/2851141.2851168},
+  doi       = {10.1145/2851141.2851168},
+  abstract  = {Concurrent data structures that have fast and predictable performance are of critical importance for harnessing the power of multicore processors, which are now ubiquitous. Although wait-free objects, whose operations complete in a bounded number of steps, were devised more than two decades ago, wait-free objects that can deliver scalable high performance are still rare.In this paper, we present the first wait-free FIFO queue based on fetch-and-add (FAA). While compare-and-swap (CAS) based non-blocking algorithms may perform poorly due to work wasted by CAS failures, algorithms that coordinate using FAA, which is guaranteed to succeed, can in principle perform better under high contention. Along with FAA, our queue uses a custom epoch-based scheme to reclaim memory; on x86 architectures, it requires no extra memory fences on our algorithm's typical execution path. An empirical study of our new FAA-based wait-free FIFO queue under high contention on four different architectures with many hardware threads shows that it outperforms prior queue designs that lack a wait-free progress guarantee. Surprisingly, at the highest level of contention, the throughput of our queue is often as high as that of a microbenchmark that only performs FAA. As a result, our fast wait-free queue implementation is useful in practice on most multi-core systems today. We believe that our design can serve as an example of how to construct other fast wait-free objects.},
+  booktitle = {Proceedings of the 21st ACM SIGPLAN Symposium on Principles and Practice of Parallel Programming},
+  articleno = {16},
+  numpages  = {13},
+  keywords  = {non-blocking queue, wait-free, fast-path-slow-path},
+  location  = {Barcelona, Spain},
+  series    = {PPoPP '16}
+}
 
 @article{10.1145/3016078.2851168,
   author     = {Yang, Chaoran and Mellor-Crummey, John},
@@ -373,23 +373,23 @@
   copyright = {Creative Commons Attribution 3.0 Unported license (CC-BY 3.0)}
 }
 
-% @inproceedings{10.1145/2442516.2442527,
-%   author    = {Morrison, Adam and Afek, Yehuda},
-%   title     = {Fast Concurrent Queues for X86 Processors},
-%   year      = {2013},
-%   isbn      = {9781450319225},
-%   publisher = {Association for Computing Machinery},
-%   address   = {New York, NY, USA},
-%   url       = {https://doi.org/10.1145/2442516.2442527},
-%   doi       = {10.1145/2442516.2442527},
-%   abstract  = {Conventional wisdom in designing concurrent data structures is to use the most powerful synchronization primitive, namely compare-and-swap (CAS), and to avoid contended hot spots. In building concurrent FIFO queues, this reasoning has led researchers to propose combining-based concurrent queues.This paper takes a different approach, showing how to rely on fetch-and-add (F&amp;A), a less powerful primitive that is available on x86 processors, to construct a nonblocking (lock-free) linearizable concurrent FIFO queue which, despite the F&amp;A being a contended hot spot, outperforms combining-based implementations by 1.5x to 2.5x in all concurrency levels on an x86 server with four multicore processors, in both single-processor and multi-processor executions.},
-%   booktitle = {Proceedings of the 18th ACM SIGPLAN Symposium on Principles and Practice of Parallel Programming},
-%   pages     = {103–112},
-%   numpages  = {10},
-%   keywords  = {concurrent queue, fetch-and-add, nonblocking algorithm},
-%   location  = {Shenzhen, China},
-%   series    = {PPoPP '13}
-% }
+@inproceedings{10.1145/2442516.2442527,
+  author    = {Morrison, Adam and Afek, Yehuda},
+  title     = {Fast Concurrent Queues for X86 Processors},
+  year      = {2013},
+  isbn      = {9781450319225},
+  publisher = {Association for Computing Machinery},
+  address   = {New York, NY, USA},
+  url       = {https://doi.org/10.1145/2442516.2442527},
+  doi       = {10.1145/2442516.2442527},
+  abstract  = {Conventional wisdom in designing concurrent data structures is to use the most powerful synchronization primitive, namely compare-and-swap (CAS), and to avoid contended hot spots. In building concurrent FIFO queues, this reasoning has led researchers to propose combining-based concurrent queues.This paper takes a different approach, showing how to rely on fetch-and-add (F&amp;A), a less powerful primitive that is available on x86 processors, to construct a nonblocking (lock-free) linearizable concurrent FIFO queue which, despite the F&amp;A being a contended hot spot, outperforms combining-based implementations by 1.5x to 2.5x in all concurrency levels on an x86 server with four multicore processors, in both single-processor and multi-processor executions.},
+  booktitle = {Proceedings of the 18th ACM SIGPLAN Symposium on Principles and Practice of Parallel Programming},
+  pages     = {103–112},
+  numpages  = {10},
+  keywords  = {concurrent queue, fetch-and-add, nonblocking algorithm},
+  location  = {Shenzhen, China},
+  series    = {PPoPP '13}
+}
 
 @article{10.1145/2517327.2442527,
   author     = {Morrison, Adam and Afek, Yehuda},

@@ -320,6 +320,13 @@ Le fait que ces tests ne passent pas est dû à un problème de modification con
 Nous avons une solution temporaire où l'on masque les interruptions, ce qui nous permet de passer tous les tests sauf certains RPC.
 Ce bug reste donc à corriger.
 
+Lors de l'exécution de la suite de tests sur la machine fournie par \atos{}, nous avons été confrontés à des crashs.
+En effet, la machine est mal refroidie et elle plante lorsqu'elle est soumise à une charge élevée.
+Même en configurant le CPU en mode économie d'énergie, la machine finit par crasher.
+On peut voir sur la figure \ref{fig:crashTemp} en annexe les courbes de température au cours du temps,
+en bleu pour un CPU et en orange pour un autre.
+Les mesures sont faite par la \emph{BMC}. % (Baseboard Management Controller)
+
 \subsection{Reste à faire et les bugs}
 
 Il reste donc à corriger le bug de modification concurrente des \emph{pw},
