@@ -189,7 +189,7 @@ Si le verrou est pris, alors les tâches du coeur sont exécutés. Sinon, on pas
 
 Il est important de rappeler qu'on ne peut pas attendre dans un handler de signal ou d'interruption,
 et c'est précisément ce genre de handler qui déclenche le \emph{handler de driver}.
-Donc, plutôt que d'attendre, le \emph{handler de driver}.
+Donc, il ne faut pas faire d'attendre dans le \emph{handler de driver}.
 
 Ensuite, nous essayons de faire progresser tous les éléments des nouvelles liste de \emph{pw}.
 Pour cela, nous appelons les mêmes fonctions que celles utilisées dans le \emph{nm_schedule} principal.

@@ -32,7 +32,7 @@ Chaque noeud possède une ou plusieurs cartes réseaux et il faut les programmer
 
 Le stage se passe donc aussi dans un contexte système.
 Chaque noeud a son propre système d'exploitation qui permet la gestion des ressources, des processus, des fichiers, des périphériques.
-Pour cela, le système a 2 espaces :
+Pour cela, le système deux espaces :
 \begin{itemize}
   \item Un espace noyau (kernel en anglais) où seul le code du système peut s'exécuter.
   Le code du système peut donc modifier n'importe quel endroit de la mémoire, exécuter n'importe quelle instruction...
@@ -91,7 +91,7 @@ Il faut donc, peut importe la technique, régulièrement scruté pour faire prog
 Le \emph{polling} consiste à scruter (poll) régulièrement si un événement a été reçu.
 Concrètement, cela consiste à lire une zone mémoire modifiée par la carte réseau et vérifier si un bit est passé à 1.
 Pour cela, il est possible de dédier un thread qui effectuera une attente active, scrutant sans cesse si un événement a été reçu.
-Cependant, cette technique entraîne la perte d'une unité de calcul quand le thread est ordonnancer, ce qui réduit la puissance de calcul, donc elle est utilisée dans certaine cas comme expliqué dans cette article \cite{denis:hal-03695835}.
+Cependant, cette technique entraîne la perte d'une unité de calcul quand le thread est ordonnancer, ce qui réduit la puissance de calcul, donc elle est utilisée dans certains cas comme expliqué dans cette article \cite{denis:hal-03695835}.
 Une autre approche consiste à entrelacer le code de l'utilisateur avec les scrutations, ce qui est fréquemment utilisé, mais cela oblige l'utilisateur à prendre en compte la progression.
 Une troisième solution, utilisée par \emph{Pioman} dans \emph{NewMadeleine} (nous en parlerons plus tard), consiste à effectuer ces scrutations de manière opportuniste dans les threads qui ont fini leur calcul, mais pour cela, il faut déjà utiliser plusieurs threads et avoir une application avec des calculs de durée hétérogène.
 
@@ -219,7 +219,7 @@ le fonctionnement du système de progression opportuniste \emph{Pioman} est déc
 Pour l'impact de l'overlap et la manière de le mesurer, l'article \cite{denis:hal-01324179} explique tout en détail.
 Concernant l'utilisation des interruptions pour transmettre des événements réseau, les travaux de Mathieu Barbe pendant son stage en 2019 sont disponibles ici \cite{internshipMathieu}.
 Ces travaux visent à réduire la latence due au passage par un driver noyau.
-Ils abordent également les perspectives de traitement direct des interruptions depuis l'espace utilisateur, ce qui a conduit à ce stage.
+Il aborde également la perspective de traitement direct des interruptions depuis l'espace utilisateur, ce qui a conduit à ce stage.
 
 Dans cette section il manque les travaux fait pour la progression des communications avec \emph{MVAPICH}, \emph{MPICH}, \emph{MxM}, etc.
 %TODO: le faire pour tous ce qui existe
