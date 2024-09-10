@@ -60,8 +60,8 @@ Pour déclencher une interruption, il y a quatre possibilités :
   \item Une instruction comme \code{INT80 numSysCall} pour déclencher un appel système, ou bien \code{INT3} pour définir un point d'arrêt, ou encore \code{INTO}, \code{BOUND} et \code{INT n}.
   \item Des broches du CPU dédiées à la réception d'interruptions lancées à partir d'un périphérique.
   \item Demander à l'\emph{APIC} elle-même grâce à un registre \emph{ICR} pour "Interrupt Command Register".
-  Il existe un \emph{ICR} par vecteur, donc il faut écrire l'\emph{APIC ID} du destinataire dans le \emph{ICR} du vecteur que l'on veut déclencher.
-  Seul le CPU et le noyau peuvent modifier les \emph{ICR}. % TODO: est peut être les périphérique non ?
+  Il faut écrire l'\emph{APIC ID} du destinataire dans le \emph{ICR} ainsi que le vecteur que l'on veut déclencher.
+  Seul le CPU et le noyau peuvent modifier les \emph{ICR}.
 \end{enumerate}
 
 On voit bien que les \emph{IRQ} fonctionnent au niveau du noyau et du CPU.
@@ -139,7 +139,7 @@ Enfin, la dernière instruction permet d'envoyer une \uintr{} en utilisant un in
   \resizebox{\columnwidth}{!}{%
   \begin{tabular}{|m{.5\textwidth}|m{.5\textwidth}|}
     \hline
-    \bf Interruption (IRQ) & \bf Interruption utilisateur (\uintr{})\\
+    \bf Interruption (IRQ) & \bf Interruption utilisateur (\uintr{})\\ % Interruption classique & interruption en espace utilisateur
     \hline
     cli (\textbf{CL}ear \textbf{I}F) & clui (\textbf{CL}ear \textbf{UI}F)\\
     \hline

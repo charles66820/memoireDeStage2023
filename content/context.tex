@@ -25,7 +25,7 @@ Dans le contexte du stage, nous nous sommes concentrés sur les communications e
 Les noeuds sont connectés entre eux par un réseau haute performance dédié aux communications, qui n'est pas forcément de type Ethernet.
 La gestion des noeuds est généralement effectuée par un second réseau plus traditionnel (Ethernet ; TCP/IP).
 Les réseaux haute performance ont une latence de l'ordre de quelques microsecondes ce qui n'est pas le cas des réseaux classiques qui ont une plus grande latence.
-Avec ce type de réseaux, le débit est aussi bien plus élevé.
+Avec ce type de réseaux, le débit est aussi, bien plus élevé.
 Chaque noeud possède une ou plusieurs cartes réseaux et il faut les programmer.
 
 \subsection{OS bypass}
@@ -195,6 +195,7 @@ Elle est développée au Centre Inria de l'université de Bordeaux.
 Elle est basée sur un système de progression événementielle, ce qui lui permet d'être asynchrone.
 Elle est composée de modules, ce qui lui permet de charger dynamiquement des stratégies d'optimisation sur les paquets.
 Ces stratégies sont l'agrégation de paquets, l'utilisation de priorités et le multi-rail. % /* TODO: précision multi-rail/split_balance */
+% un support de transport nommé "mini-driver"
 Elle possède également un système de drivers pour supporter différents types de communications, tels que des réseaux
 (e.g. portals4 pour BXI, ibverbs pour InfiniBand, psm2 pour OmniPath, ofi pour "Open Fabrics Interfaces", TCP) % Slingshot => cci ?
 et des communications locales (shm pour "mémoire partagée", socket, self).
